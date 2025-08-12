@@ -44,8 +44,7 @@ const Dashboard = () => {
   const token = sessionStorage.getItem('authToken')
   const userId = sessionStorage.getItem('id')
   const role = sessionStorage.getItem('role')
-  const stateId = sessionStorage.getItem('stateId');
-  console.log(stateId);
+  const stateId = sessionStorage.getItem('stateId')
   const [statisticData, setStatisticData] = useState([])
   const [todayTraining, setTodayTraining] = useState([])
   const [upComingTraining, setUpComingTraining] = useState([])
@@ -69,7 +68,13 @@ const Dashboard = () => {
     }
     const getTodayTraining = async () => {
       try {
-        const response = await axios.get(`${endpoint}/get-today-trainings`, {
+        let url = `${endpoint}/get-today-trainings`
+        console.log(role, url)
+        if (role === 'SRM' || role === 'DRM') {
+          url += `?id=${userId}`
+        }
+        console.log(url)
+        const response = await axios.get(url, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -104,10 +109,10 @@ const Dashboard = () => {
   const requestSort = (key) => {
     handleSort(key)
   }
-  const [designation, setDesignation] = useState(null);
+  const [designation, setDesignation] = useState(null)
   const handleShowSRMList = async (type) => {
-    setDesignation(type);
-    setSrmListModalVisible(true);
+    setDesignation(type)
+    setSrmListModalVisible(true)
     setShowSrmListModal(true)
   }
   return (
@@ -346,7 +351,7 @@ const Dashboard = () => {
         >
           <CModalHeader></CModalHeader>
           <CModalBody>
-            <AllSrmList designation={designation} stateId={stateId}/>
+            <AllSrmList designation={designation} stateId={stateId} />
           </CModalBody>
         </CModal>
       )}
