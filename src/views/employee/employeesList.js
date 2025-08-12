@@ -41,6 +41,7 @@ import {
   cilX,
   cilLaptop,
   cilSync,
+  cilLockLocked,
 } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import AddEmployee from './addEmployee'
@@ -311,7 +312,6 @@ const EmployeeList = () => {
     fetchAllEmployees()
   }
 
-
   // Function to handle button click
   const handleViewTraining = (employee) => {
     setSelectedTraining(employee)
@@ -341,7 +341,6 @@ const EmployeeList = () => {
     }
   }
 
-
   const filteredTrainings = trainings.filter((training) => {
     const matchesStatus = filter === 'all' || training.status === filter
     const matchesTitle =
@@ -363,6 +362,25 @@ const EmployeeList = () => {
       : hour === 12
         ? `12:${minutes} PM`
         : `${hour}:${minutes} AM`
+  }
+
+  const handleResetPassword = async (employee) => {
+    try {
+      console.log('Resetting password for:', employee)
+      const response = await axios.get(
+        `${endpoint}/employees/reset-password/${employee._id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      )
+      if (response.status !== 200) {
+        throw new Error('Failed to reset password')
+      }
+      // Show success message
+      SweetAlert.fire('Success', response.data.message, 'success')
+    } catch (error) {
+      SweetAlert.fire('Error', error.message, 'error')
+    }
   }
   return (
     <CRow>
@@ -510,6 +528,15 @@ const EmployeeList = () => {
                           onClick={() => handleEditClick(employee)}
                         >
                           <CIcon icon={cilPencil} />
+                        </CButton>
+                        <CButton
+                          color="primary"
+                          size="sm"
+                          className="me-2"
+                          title="Reset Password"
+                          onClick={() => handleResetPassword(employee)}
+                        >
+                          <CIcon icon={cilLockLocked} />
                         </CButton>
                         <CButton
                           color="danger"
