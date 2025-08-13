@@ -8,6 +8,7 @@ const AddEmployee = React.lazy(() => import('./views/employee/addEmployee'))
 const EmployeeList = React.lazy(() => import('./views/employee/employeesList'))
 const AddTraining = React.lazy(() => import('./views/training/addTraining'))
 const TrainingList = React.lazy(() => import('./views/training/trainingList'))
+const FeedbackList = React.lazy(() => import('./views/feedback/feedbackList'))
 
 const routes = [
   { path: '/', exact: true, name: Login },
@@ -18,6 +19,7 @@ const routes = [
   { path: '/employee-list', name: 'Employee List', element: EmployeeList },
   { path: '/add-training', name: 'Add Training', element: AddTraining },
   { path: '/training-list', name: 'Training List', element: TrainingList },
+  { path: '/feedback-list', name: 'Feedback List', element: FeedbackList },
   
 ]
 

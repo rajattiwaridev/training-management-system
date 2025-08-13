@@ -23,6 +23,7 @@ import { CBadge } from '@coreui/react-pro'
 import { format } from 'date-fns'
 import DashboardTrainingList from './dashboardTrainingList'
 import AllSrmList from './allSrmList'
+import TodayTrainingList from './todayTrainingList'
 
 const getStatusBadgeColor = (status) => {
   if (!status) return 'secondary'
@@ -336,12 +337,22 @@ const Dashboard = () => {
           )}
         </CCardBody>
       </CCard>
-      <CCard className="mb-4">
-        <CCardHeader>Today Trainings</CCardHeader>
-        <CCardBody>
-          <DashboardTrainingList trainings={todayTraining} />
-        </CCardBody>
-      </CCard>
+      {role === 'SUPERADMIN' && (
+        <CCard className="mb-4">
+          <CCardHeader>Today Trainings</CCardHeader>
+          <CCardBody>
+            <DashboardTrainingList trainings={todayTraining} />
+          </CCardBody>
+        </CCard>
+      )}
+      {(role === 'SRM' || role === 'DRM') && (
+        <CCard className="mb-4">
+          <CCardHeader>Today Trainings</CCardHeader>
+          <CCardBody>
+            <TodayTrainingList />
+          </CCardBody>
+        </CCard>
+      )}
 
       {showSrmListModal && (
         <CModal

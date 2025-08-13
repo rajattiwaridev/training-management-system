@@ -13,7 +13,7 @@ import CIcon from '@coreui/icons-react'
 
 import { AppSidebarNav } from './AppSidebarNav'
 
-import logo from 'src/assets/images/cg-transport.png'
+import logo from 'src/assets/images/logo.png'
 
 // sidebar nav config
 import navigation from '../_nav'
@@ -44,8 +44,8 @@ const AppSidebar = () => {
           }}
         >
           <img src={logo} style={{ width: '50%', height: '50%' }} alt="Logo" />
-          <p style={{ margin: 0, fontWeight: 'bold' }}>ADMIN</p>
-          <p style={{ margin: 0, fontWeight: 'bold' }}>CG TRANSPORT</p>
+          <p style={{ margin: 0, fontWeight: 'bold' }}>Training Management</p>
+          <p style={{ margin: 0, fontWeight: 'bold' }}> System</p>
         </CSidebarBrand>
 
         <CCloseButton

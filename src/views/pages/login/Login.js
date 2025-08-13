@@ -15,7 +15,7 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser, cilPhone } from '@coreui/icons'
-import logo from 'src/assets/images/cg-transport.png'
+import logo from 'src/assets/images/logo.png'
 import { useNavigate } from 'react-router-dom'
 /*function getBrowserInfo() {
   const userAgent = navigator.userAgent
@@ -194,7 +194,7 @@ const Login = () => {
           sessionStorage.removeItem('stateId')
         }
 
-        navigate('/dashboard');
+        navigate('/dashboard', { replace: true });
       } else {
         console.warn('Unexpected response status:', response.status)
       }
