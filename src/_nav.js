@@ -81,6 +81,12 @@ const _nav = [
               to: '/training-list',
               icon: <CIcon icon={cilList} customClassName="nav-icon" />,
             },
+            {
+              component: CNavItem,
+              name: 'Feedback List',
+              to: '/feedback-list',
+              icon: <CIcon icon={cilList} customClassName="nav-icon" />,
+            },
           ],
         },
       ]

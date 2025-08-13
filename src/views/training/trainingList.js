@@ -35,7 +35,7 @@ const TrainingList = () => {
   const userId = sessionStorage.getItem('user')
   const [trainings, setTrainings] = useState([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState('scheduled')
   const [refresh, setRefresh] = useState(false)
   const [titleFilter, setTitleFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')

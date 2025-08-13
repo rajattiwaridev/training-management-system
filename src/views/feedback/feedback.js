@@ -68,7 +68,7 @@ const Feedback = () => {
         })
 
         if (response.status === 200) {
-          setLinkDetails(response.data)
+          setLinkDetails(response.data.status)
           if (response.data.status === true) {
             SweetAlert.fire(
               'Error',
