@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   CCard,
   CCardHeader,
@@ -29,8 +29,6 @@ import axios from 'axios'
 const AddTraining = () => {
   const endpoint = import.meta.env.VITE_BACKEND_API
   const token = sessionStorage.getItem('authToken')
-  const role = sessionStorage.getItem('role')
-  const stateId = sessionStorage.getItem('stateId')
   const user = sessionStorage.getItem('user')
   const [validated, setValidated] = useState(false)
   const [trainingData, setTrainingData] = useState({
@@ -43,7 +41,26 @@ const AddTraining = () => {
     trainingType: '',
   })
   const [trainings, setTrainings] = useState([])
+  const [existingTrainings, setExistingTrainings] = useState([])
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Fetch existing trainings on component mount
+  useEffect(() => {
+    const fetchExistingTrainings = async () => {
+      try {
+        const response = await axios.get(`${endpoint}/trainings`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        setExistingTrainings(response.data)
+      } catch (error) {
+        console.error('Error fetching existing trainings:', error)
+      }
+    }
+    fetchExistingTrainings()
+  }, [endpoint, token])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -60,7 +77,14 @@ const AddTraining = () => {
     }))
   }
 
-  const handleAddTraining = (e) => {
+  const formatDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleAddTraining = async (e) => {
     e.preventDefault()
     const form = e.currentTarget
     if (form.checkValidity() === false) {
@@ -69,39 +93,44 @@ const AddTraining = () => {
       return
     }
 
-    const today = new Date()
-    const selectedDate = new Date(trainingData.date)
-    const isToday = today.toDateString() === selectedDate.toDateString()
+    // Clear previous errors
+    setError('')
+
+    // Time validation
+    if (!trainingData.startTime || !trainingData.endTime) {
+      setError('Both start and end times are required')
+      return
+    }
 
     if (trainingData.startTime >= trainingData.endTime) {
       setError('End time must be after start time')
       return
     }
 
-    if (isToday) {
-      const now = new Date()
-      const [startHour, startMin] = trainingData.startTime.split(':').map(Number)
-      const startDateTime = new Date(selectedDate)
-      startDateTime.setHours(startHour, startMin, 0)
+    // Format date to YYYY-MM-DD in LOCAL time
+    const trainingDate = formatDate(trainingData.date)
 
-      if (startDateTime < now) {
-        setError('Start time cannot be in the past')
-        return
-      }
+    // Check for existing training conflicts
+    const hasConflict = [...existingTrainings, ...trainings].some(training => {
+      return (
+        training.date === trainingDate && 
+        training.startTime === trainingData.startTime
+      )
+    })
+
+    if (hasConflict) {
+      setError('A training already exists at this date and start time')
+      return
     }
-
-    // Format date to YYYY-MM-DD
-    const formattedDate = trainingData.date.toISOString().split('T')[0]
 
     const newTraining = {
       ...trainingData,
-      date: formattedDate,
+      date: trainingDate,
       id: Date.now(), // temporary ID for local management
     }
 
     setTrainings([...trainings, newTraining])
     resetForm()
-    setError('')
   }
 
   const resetForm = () => {
@@ -115,6 +144,7 @@ const AddTraining = () => {
       trainingType: '',
     })
     setValidated(false)
+    setError('')
   }
 
   const handleRemoveTraining = (id) => {
@@ -126,7 +156,8 @@ const AddTraining = () => {
       SweetAlert.fire('Warning', 'Please add at least one training session', 'warning')
       return
     }
-    console.log(trainingData);
+
+    setIsLoading(true)
     try {
       const response = await axios.post(`${endpoint}/trainings/${user}`, trainings, {
         headers: {
@@ -137,10 +168,14 @@ const AddTraining = () => {
       if (response.status === 200) {
         SweetAlert.fire('Success', 'Trainings saved successfully', 'success')
         setTrainings([])
+        // Update existing trainings with the newly added ones
+        setExistingTrainings([...existingTrainings, ...trainings])
       }
     } catch (error) {
       SweetAlert.fire('Error', 'Failed to save trainings', 'error')
       console.error('Error saving trainings:', error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -148,7 +183,23 @@ const AddTraining = () => {
     if (!timeString) return ''
     const [hours, minutes] = timeString.split(':')
     const hour = parseInt(hours, 10)
-    return hour > 12 ? `${hour - 12}:${minutes} PM` : `${hour}:${minutes} AM`
+    
+    if (hour === 0) {
+      return `12:${minutes} AM`
+    } else if (hour === 12) {
+      return `12:${minutes} PM`
+    } else if (hour > 12) {
+      return `${hour - 12}:${minutes} PM`
+    } else {
+      return `${hour}:${minutes} AM`
+    }
+  }
+
+  const formatDateDisplay = (dateString) => {
+    if (!dateString) return ''
+    const dateObj = new Date(dateString);
+    const options = { year: 'numeric', month: 'short', day: 'numeric' }
+    return dateObj.toLocaleDateString(undefined, options)
   }
 
   return (
@@ -223,8 +274,8 @@ const AddTraining = () => {
                 <Calendar
                   onChange={handleDateChange}
                   value={trainingData.date}
-                  minDate={new Date()} // 🔒 block past dates
                   className="w-100 border rounded p-2"
+                  minDate={new Date()}
                 />
               </CCol>
               <CCol md={6}>
@@ -294,7 +345,7 @@ const AddTraining = () => {
                       <CTableDataCell>{training.trainerName}</CTableDataCell>
                       <CTableDataCell>{training.trainingType}</CTableDataCell>
                       <CTableDataCell>{training.location}</CTableDataCell>
-                      <CTableDataCell>{training.date}</CTableDataCell>
+                      <CTableDataCell>{formatDateDisplay(training.date)}</CTableDataCell>
                       <CTableDataCell>
                         {formatTime(training.startTime)} - {formatTime(training.endTime)}
                       </CTableDataCell>
@@ -312,9 +363,13 @@ const AddTraining = () => {
                 </CTableBody>
               </CTable>
               <div className="d-flex justify-content-end mt-3">
-                <CButton color="success" onClick={handleSaveAll}>
+                <CButton 
+                  color="success" 
+                  onClick={handleSaveAll}
+                  disabled={isLoading}
+                >
                   <CIcon icon={cilSave} className="me-2" />
-                  Save All Trainings
+                  {isLoading ? 'Saving...' : 'Save All Trainings'}
                 </CButton>
               </div>
             </CCardBody>

@@ -135,6 +135,7 @@ const FeedbackList = () => {
                     <CTableHeaderCell>Trainer</CTableHeaderCell>
                     <CTableHeaderCell>Date</CTableHeaderCell>
                     <CTableHeaderCell>Attendance</CTableHeaderCell>
+                    <CTableHeaderCell>Feedback Count</CTableHeaderCell>
                     <CTableHeaderCell>Actions</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
@@ -148,15 +149,27 @@ const FeedbackList = () => {
                         <CBadge color="info">{training.attendanceCount || 0} attendees</CBadge>
                       </CTableDataCell>
                       <CTableDataCell>
-                        <CButton
-                          color="info"
-                          size="sm"
-                          onClick={() => handleViewFeedback(training)}
-                        >
-                          <CIcon icon={cilInfo} className="me-1" />
-                          View Feedback
-                        </CButton>
+                        <CBadge color="info">{training.feedbackCount || 0} feedbacks</CBadge>
                       </CTableDataCell>
+                      {training.feedbackCount > 0 ? (
+                        <CTableDataCell>
+                          <CButton
+                            color="info"
+                            size="sm"
+                            onClick={() => handleViewFeedback(training)}
+                          >
+                            <CIcon icon={cilInfo} className="me-1" />
+                            View Feedback
+                          </CButton>
+                        </CTableDataCell>
+                      ) : (
+                        <CTableDataCell>
+                          <CButton color="danger" size="sm">
+                            <CIcon icon={cilInfo} className="me-1" />
+                            No Feedback
+                          </CButton>
+                        </CTableDataCell>
+                      )}
                     </CTableRow>
                   ))}
                 </CTableBody>
