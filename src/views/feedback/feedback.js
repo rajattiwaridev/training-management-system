@@ -140,6 +140,7 @@ const Feedback = () => {
         setTrainerRating(0)
         setContentRating(0)
         setSuggestions('')
+        window.location.reload() // Reload to reset the form and state
       } else {
         SweetAlert.fire('Error', response.data.msg, 'error')
       }

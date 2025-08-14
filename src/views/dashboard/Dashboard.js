@@ -24,6 +24,7 @@ import { format } from 'date-fns'
 import DashboardTrainingList from './dashboardTrainingList'
 import AllSrmList from './allSrmList'
 import TodayTrainingList from './todayTrainingList'
+import './passwordReset.css'
 
 const getStatusBadgeColor = (status) => {
   if (!status) return 'secondary'
@@ -88,6 +89,133 @@ const Dashboard = () => {
         SweetAlert.fire('Error', 'Failed to fetch data', 'error')
       }
     }
+    const getEmployeeData = async () => {
+      try {
+        const response = await axios.get(`${endpoint}/employees/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (response.status === 200) {
+          const employeeData = response.data
+
+          if (employeeData.isPasswordReset !== true) {
+            let resetSuccessful = false
+
+            while (!resetSuccessful) {
+              const { value: formValues, dismiss } = await SweetAlert.fire({
+                title: 'Password Reset Required',
+                html: `
+              <div class="password-reset-form">
+                <div class="form-group">
+                  <label for="newPassword" class="form-label">New Password</label>
+                  <input type="password" id="newPassword" class="form-control" placeholder="Enter new password">
+                  <div class="invalid-feedback" id="newPasswordError"></div>
+                  <small class="form-text text-muted">
+                    Password must contain: 8+ characters, uppercase, lowercase, number, and special character
+                  </small>
+                </div>
+                <div class="form-group mt-3">
+                  <label for="confirmPassword" class="form-label">Confirm Password</label>
+                  <input type="password" id="confirmPassword" class="form-control" placeholder="Confirm new password">
+                  <div class="invalid-feedback" id="confirmPasswordError"></div>
+                </div>
+              </div>
+            `,
+                icon: 'warning',
+                focusConfirm: false,
+                showCancelButton: false,
+                confirmButtonText: 'Reset Password',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                preConfirm: () => {
+                  const newPassword = document.getElementById('newPassword').value
+                  const confirmPassword = document.getElementById('confirmPassword').value
+
+                  const passwordRegex =
+                    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+                  let isValid = true
+
+                  document.getElementById('newPassword').classList.remove('is-invalid')
+                  document.getElementById('confirmPassword').classList.remove('is-invalid')
+
+                  if (!newPassword) {
+                    document.getElementById('newPassword').classList.add('is-invalid')
+                    document.getElementById('newPasswordError').textContent = 'Password is required'
+                    isValid = false
+                  } else if (newPassword.length < 8) {
+                    document.getElementById('newPassword').classList.add('is-invalid')
+                    document.getElementById('newPasswordError').textContent =
+                      'Password must be at least 8 characters'
+                    isValid = false
+                  } else if (!passwordRegex.test(newPassword)) {
+                    document.getElementById('newPassword').classList.add('is-invalid')
+                    document.getElementById('newPasswordError').textContent =
+                      'Must include uppercase, lowercase, number, and special character'
+                    isValid = false
+                  }
+
+                  if (!confirmPassword) {
+                    document.getElementById('confirmPassword').classList.add('is-invalid')
+                    document.getElementById('confirmPasswordError').textContent =
+                      'Please confirm your password'
+                    isValid = false
+                  } else if (confirmPassword !== newPassword) {
+                    document.getElementById('confirmPassword').classList.add('is-invalid')
+                    document.getElementById('confirmPasswordError').textContent =
+                      'Passwords do not match'
+                    isValid = false
+                  }
+
+                  return isValid ? { newPassword, confirmPassword } : false
+                },
+              })
+
+              if (dismiss) {
+                break // Exit if user dismissed the dialog
+              }
+
+              if (formValues) {
+                try {
+                  const resetResponse = await axios.post(
+                    `${endpoint}/employees/${userId}/reset-password`,
+                    { newPassword: formValues.newPassword },
+                    {
+                      headers: {
+                        Authorization: `Bearer ${token}`,
+                      },
+                    },
+                  )
+
+                  if (resetResponse.status === 200) {
+                    resetSuccessful = true
+                    await SweetAlert.fire(
+                      'Success!',
+                      'Your password has been changed successfully.',
+                      'success',
+                    )
+                    window.location.reload()
+                  }
+                } catch (error) {
+                  // Show error but keep the reset dialog open
+                  await SweetAlert.fire({
+                    title: 'Error',
+                    text: 'Failed to reset password. Please try again.',
+                    icon: 'error',
+                    confirmButtonText: 'Try Again',
+                  })
+                  // The while loop will continue, showing the reset dialog again
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        SweetAlert.fire('Error', 'Failed to fetch employee data', 'error')
+      }
+    }
+    getEmployeeData()
     getCount()
     getTodayTraining()
   }, [token])
