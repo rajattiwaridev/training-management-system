@@ -215,7 +215,9 @@ const Dashboard = () => {
         SweetAlert.fire('Error', 'Failed to fetch employee data', 'error')
       }
     }
-    getEmployeeData()
+    if (role !== 'SUPERADMIN') {
+      getEmployeeData()
+    }
     getCount()
     getTodayTraining()
   }, [token])
@@ -253,15 +255,31 @@ const Dashboard = () => {
             <CRow>
               <CCol xs={12} md={6} xl={6}>
                 <CRow>
-                  <CCol xs={6} onClick={() => handleShowSRMList('SRM')}>
+                  <CCol xs={6}>
                     <div className="border-start border-start-4 border-start-info py-1 px-3">
-                      <div className="text-body-secondary text-truncate small">Total SRM's</div>
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div className="text-body-secondary small">Total SRM's</div>
+                        <button
+                          className="btn btn-link p-0 text-nowrap"
+                          onClick={() => handleShowSRMList('SRM')}
+                        >
+                          View
+                        </button>
+                      </div>
                       <div className="fs-5 fw-semibold">{statisticData.srmCount}</div>
                     </div>
                   </CCol>
-                  <CCol xs={6} onClick={() => handleShowSRMList('DRM')}>
-                    <div className="border-start border-start-4 border-start-danger py-1 px-3 mb-3">
-                      <div className="text-body-secondary text-truncate small">Total DRM's</div>
+                  <CCol xs={6}>
+                    <div className="border-start border-start-4 border-start-info py-1 px-3">
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div className="text-body-secondary small">Total DRM's</div>
+                        <button
+                          className="btn btn-link p-0 text-nowrap"
+                          onClick={() => handleShowSRMList('DRM')}
+                        >
+                          View
+                        </button>
+                      </div>
                       <div className="fs-5 fw-semibold">{statisticData.drmCount}</div>
                     </div>
                   </CCol>
@@ -303,6 +321,26 @@ const Dashboard = () => {
                         Training Cancelled
                       </div>
                       <div className="fs-5 fw-semibold">{statisticData.trainingCountCancelled}</div>
+                    </div>
+                  </CCol>
+                </CRow>
+              </CCol>
+              <CCol xs={12} md={6} xl={6}>
+                <CRow>
+                  <CCol xs={6}>
+                    <div className="border-start border-start-4 border-start-success py-1 px-3 mb-3">
+                      <div className="text-body-secondary text-truncate small">
+                        Total Feedback Requested
+                      </div>
+                      <div className="fs-5 fw-semibold">{statisticData.feedbackRequestCount}</div>
+                    </div>
+                  </CCol>
+                  <CCol xs={6}>
+                    <div className="border-start border-start-4 border-start-success py-1 px-3 mb-3">
+                      <div className="text-body-secondary text-truncate small">
+                        Total Feedback Given
+                      </div>
+                      <div className="fs-5 fw-semibold">{statisticData.feedbackGivenCount}</div>
                     </div>
                   </CCol>
                 </CRow>
