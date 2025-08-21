@@ -10,6 +10,7 @@ const AddTraining = React.lazy(() => import('./views/training/addTraining'))
 const TrainingList = React.lazy(() => import('./views/training/trainingList'))
 const FeedbackList = React.lazy(() => import('./views/feedback/feedbackList'))
 const MasterReport = React.lazy(() => import('./views/reports/MasterReport'))
+const AddDepartment = React.lazy(() => import('./views/department/addDepartment'))
 
 const routes = [
   { path: '/', exact: true, name: Login },
@@ -22,6 +23,7 @@ const routes = [
   { path: '/training-list', name: 'Training List', element: TrainingList },
   { path: '/feedback-list', name: 'Feedback List', element: FeedbackList },
   { path: '/master-report', name: 'Master Report', element: MasterReport },
+  { path: '/department', name: 'Department', element: AddDepartment },
 ]
 
 export default routes

@@ -39,11 +39,13 @@ const AddTraining = () => {
     startTime: '',
     endTime: '',
     trainingType: '',
+    departments: '',
   })
   const [trainings, setTrainings] = useState([])
   const [existingTrainings, setExistingTrainings] = useState([])
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [departments, setDepartments] = useState([])
 
   // Fetch existing trainings on component mount
   useEffect(() => {
@@ -59,7 +61,24 @@ const AddTraining = () => {
         console.error('Error fetching existing trainings:', error)
       }
     }
+    const fetchAllDepartments = async () => {
+      try {
+        const response = await axios.get(`${endpoint}/departments`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        if (response.status === 200) {
+          setDepartments(response.data)
+        } else {
+          SweetAlert.fire('Error', 'Failed to fetch departments', 'error')
+        }
+      } catch (error) {
+        console.error('Error fetching existing trainings:', error)
+      }
+    }
     fetchExistingTrainings()
+    fetchAllDepartments()
   }, [endpoint, token])
 
   const handleChange = (e) => {
@@ -78,11 +97,11 @@ const AddTraining = () => {
   }
 
   const formatDate = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
 
   const handleAddTraining = async (e) => {
     e.preventDefault()
@@ -111,20 +130,20 @@ const AddTraining = () => {
     const trainingDate = formatDate(trainingData.date)
 
     // Check for existing training conflicts
-    const hasConflict = [...existingTrainings, ...trainings].some(training => {
-      return (
-        training.date === trainingDate && 
-        training.startTime === trainingData.startTime
-      )
+    const hasConflict = [...existingTrainings, ...trainings].some((training) => {
+      return training.date === trainingDate && training.startTime === trainingData.startTime
     })
 
     if (hasConflict) {
       setError('A training already exists at this date and start time')
       return
     }
-
+    const filteredDepartments = departments.filter(
+      (department) => department._id === trainingData.departments,
+    )
     const newTraining = {
       ...trainingData,
+      departments: filteredDepartments.length > 0 ? filteredDepartments[0].departmentName : '',
       date: trainingDate,
       id: Date.now(), // temporary ID for local management
     }
@@ -142,6 +161,7 @@ const AddTraining = () => {
       startTime: '',
       endTime: '',
       trainingType: '',
+      departments: '',
     })
     setValidated(false)
     setError('')
@@ -156,10 +176,33 @@ const AddTraining = () => {
       SweetAlert.fire('Warning', 'Please add at least one training session', 'warning')
       return
     }
-
+    trainings.forEach((training) => {
+      if (
+        !training.title ||
+        !training.trainerName ||
+        !training.location ||
+        !training.date ||
+        !training.startTime ||
+        !training.endTime ||
+        !training.trainingType ||
+        !training.departments
+      ) {
+        SweetAlert.fire('Error', 'All fields are required for each training session', 'error')
+        throw new Error('All fields are required for each training session')
+      }
+    })
+    const body = trainings.map((training) => {
+      return {
+        ...(training.toObject?.() ?? training), // ensures plain object
+        departments: departments.find((dept) => training.departments?.includes(dept.departmentName))
+          ?._id,
+      }
+    })
+    setError('')
+    setValidated(false)
     setIsLoading(true)
     try {
-      const response = await axios.post(`${endpoint}/trainings/${user}`, trainings, {
+      const response = await axios.post(`${endpoint}/trainings/${user}`, body, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -183,7 +226,7 @@ const AddTraining = () => {
     if (!timeString) return ''
     const [hours, minutes] = timeString.split(':')
     const hour = parseInt(hours, 10)
-    
+
     if (hour === 0) {
       return `12:${minutes} AM`
     } else if (hour === 12) {
@@ -197,7 +240,7 @@ const AddTraining = () => {
 
   const formatDateDisplay = (dateString) => {
     if (!dateString) return ''
-    const dateObj = new Date(dateString);
+    const dateObj = new Date(dateString)
     const options = { year: 'numeric', month: 'short', day: 'numeric' }
     return dateObj.toLocaleDateString(undefined, options)
   }
@@ -242,19 +285,40 @@ const AddTraining = () => {
               </CCol>
 
               <CCol md={6}>
-                <CFormLabel>Training Type</CFormLabel>
-                <CFormSelect
-                  name="trainingType"
-                  value={trainingData.trainingType}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Select Type</option>
-                  <option value="online">Online</option>
-                  <option value="offline">Offline</option>
-                  <option value="hybrid">Hybrid</option>
-                </CFormSelect>
-                <CFormFeedback invalid>Please select training type</CFormFeedback>
+                <CRow className="mb-3">
+                  <CCol md={6}>
+                    <CFormLabel>Department</CFormLabel>
+                    <CFormSelect
+                      name="departments"
+                      value={trainingData.departments}
+                      onChange={handleChange}
+                      required
+                    >
+                      <option value="">Select Department</option>
+                      {departments.map((department) => (
+                        <option key={department._id} value={department._id}>
+                          {department.departmentName}
+                        </option>
+                      ))}
+                    </CFormSelect>
+                    <CFormFeedback invalid>Please select department</CFormFeedback>
+                  </CCol>
+                  <CCol md={6}>
+                    <CFormLabel>Training Type</CFormLabel>
+                    <CFormSelect
+                      name="trainingType"
+                      value={trainingData.trainingType}
+                      onChange={handleChange}
+                      required
+                    >
+                      <option value="">Select Type</option>
+                      <option value="online">Online</option>
+                      <option value="offline">Offline</option>
+                      <option value="hybrid">Hybrid</option>
+                    </CFormSelect>
+                    <CFormFeedback invalid>Please select training type</CFormFeedback>
+                  </CCol>
+                </CRow>
               </CCol>
               <CCol md={6}>
                 <CFormLabel>Location</CFormLabel>
@@ -331,6 +395,7 @@ const AddTraining = () => {
                   <CTableRow>
                     <CTableHeaderCell>Title</CTableHeaderCell>
                     <CTableHeaderCell>Trainer</CTableHeaderCell>
+                    <CTableHeaderCell>Department</CTableHeaderCell>
                     <CTableHeaderCell>Type</CTableHeaderCell>
                     <CTableHeaderCell>Location</CTableHeaderCell>
                     <CTableHeaderCell>Date</CTableHeaderCell>
@@ -343,6 +408,7 @@ const AddTraining = () => {
                     <CTableRow key={training.id}>
                       <CTableDataCell>{training.title}</CTableDataCell>
                       <CTableDataCell>{training.trainerName}</CTableDataCell>
+                      <CTableDataCell>{training.departments}</CTableDataCell>
                       <CTableDataCell>{training.trainingType}</CTableDataCell>
                       <CTableDataCell>{training.location}</CTableDataCell>
                       <CTableDataCell>{formatDateDisplay(training.date)}</CTableDataCell>
@@ -363,11 +429,7 @@ const AddTraining = () => {
                 </CTableBody>
               </CTable>
               <div className="d-flex justify-content-end mt-3">
-                <CButton 
-                  color="success" 
-                  onClick={handleSaveAll}
-                  disabled={isLoading}
-                >
+                <CButton color="success" onClick={handleSaveAll} disabled={isLoading}>
                   <CIcon icon={cilSave} className="me-2" />
                   {isLoading ? 'Saving...' : 'Save All Trainings'}
                 </CButton>

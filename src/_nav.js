@@ -35,6 +35,12 @@ const _nav = [
           to: '/division',
           icon: <CIcon icon={cilList} customClassName="nav-icon" />,
         },
+        {
+          component: CNavItem,
+          name: 'Department',
+          to: '/department',
+          icon: <CIcon icon={cilList} customClassName="nav-icon" />,
+        },
       ]
     : []),
   ...(role === 'SUPERADMIN' || role === 'SRM'

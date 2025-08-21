@@ -572,6 +572,7 @@ const MasterReport = () => {
                     <CTableHeaderCell>#</CTableHeaderCell>
                     <CTableHeaderCell>Title</CTableHeaderCell>
                     <CTableHeaderCell>Trainer Name</CTableHeaderCell>
+                    <CTableHeaderCell>Department</CTableHeaderCell>
                     <CTableHeaderCell>Training Type</CTableHeaderCell>
                     <CTableHeaderCell>Date & Time</CTableHeaderCell>
                     <CTableHeaderCell>Created At</CTableHeaderCell>
@@ -586,6 +587,7 @@ const MasterReport = () => {
                       <CTableDataCell>{index + 1}</CTableDataCell>
                       <CTableDataCell>{item.title}</CTableDataCell>
                       <CTableDataCell>{item.trainerName}</CTableDataCell>
+                      <CTableDataCell>{item.departments?.departmentName}</CTableDataCell>
                       <CTableDataCell>{item.trainingType}</CTableDataCell>
                       <CTableDataCell>
                         Date : {new Date(item.date).toLocaleDateString()} <br /> Time :{' '}
