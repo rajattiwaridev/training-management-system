@@ -17,89 +17,9 @@ import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser, cilPhone } from '@coreui/icons'
 import logo from 'src/assets/images/logo.png'
 import { useNavigate } from 'react-router-dom'
-/*function getBrowserInfo() {
-  const userAgent = navigator.userAgent
-  let browserName = 'Unknown'
-  let fullVersion = 'Unknown'
-  let os = 'Unknown'
-
-  // Browser detection
-  if (/chrome|crios|crmo/i.test(userAgent) && !/edg/i.test(userAgent)) {
-    browserName = 'Chrome'
-    fullVersion = userAgent.match(/Chrome\/([\d.]+)/)?.[1] ?? 'Unknown'
-  } else if (/firefox|fxios/i.test(userAgent)) {
-    browserName = 'Firefox'
-    fullVersion = userAgent.match(/Firefox\/([\d.]+)/)?.[1] ?? 'Unknown'
-  } else if (/safari/i.test(userAgent) && !/chrome|crios|crmo/i.test(userAgent)) {
-    browserName = 'Safari'
-    fullVersion = userAgent.match(/Version\/([\d.]+)/)?.[1] ?? 'Unknown'
-  } else if (/edg/i.test(userAgent)) {
-    browserName = 'Edge'
-    fullVersion = userAgent.match(/Edg\/([\d.]+)/)?.[1] ?? 'Unknown'
-  } else if (/msie|trident/i.test(userAgent)) {
-    browserName = 'Internet Explorer'
-    fullVersion = userAgent.match(/(MSIE |rv:)([\d.]+)/)?.[2] ?? 'Unknown'
-  }
-
-  // OS detection
-  if (/windows nt 10/i.test(userAgent)) os = 'Windows 10'
-  else if (/windows nt 6.3/i.test(userAgent)) os = 'Windows 8.1'
-  else if (/windows nt 6.2/i.test(userAgent)) os = 'Windows 8'
-  else if (/windows nt 6.1/i.test(userAgent)) os = 'Windows 7'
-  else if (/macintosh|mac os x/i.test(userAgent)) os = 'macOS'
-  else if (/android/i.test(userAgent)) os = 'Android'
-  else if (/iphone|ipad|ipod/i.test(userAgent)) os = 'iOS'
-  else if (/linux/i.test(userAgent)) os = 'Linux'
-
-  return {
-    name: browserName,
-    version: fullVersion,
-    userAgent: userAgent,
-    os: os,
-  }
-}
-function detectIncognitoMode() {
-  return new Promise((resolve) => {
-    const fs = window.RequestFileSystem || window.webkitRequestFileSystem
-
-    if (!fs) {
-      // Safari uses private mode differently
-      const isSafariPrivate = () => {
-        try {
-          window.openDatabase(null, null, null, null)
-          return false
-        } catch (e) {
-          return true
-        }
-      }
-      resolve(isSafariPrivate())
-      return
-    }
-
-    fs(
-      window.TEMPORARY,
-      100,
-      () => resolve(false),
-      () => resolve(true),
-    )
-  })
-}*/
 
 const Login = () => {
   const navigate = useNavigate();
-  // (async () => {
-  //   const browserInfo = getBrowserInfo()
-  //   const isIncognito = await detectIncognitoMode()
-
-  //   const fullInfo = {
-  //     ...browserInfo,
-  //     incognito: isIncognito ? 'Yes' : 'No',
-  //   }
-
-  //   console.log(fullInfo)
-
-  //   // You can now send `fullInfo` to your backend login log
-  // })()
   const endpoint = import.meta.env.VITE_BACKEND_API
   const [loginType, setLoginType] = useState('regular') // 'regular' or 'employee'
   const [formData, setFormData] = useState({

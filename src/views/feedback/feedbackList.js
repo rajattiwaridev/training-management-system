@@ -63,7 +63,7 @@ const FeedbackList = () => {
       const response = await axios.get(`${endpoint}/feedbacks/training/${trainingId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      setFeedbacks(response.data)
+      setFeedbacks(response.data.filter(feedback => feedback.status === true)) // Only show received feedback
       setFeedbackLoading(false)
       setFeedbackModalVisible(true)
     } catch (error) {

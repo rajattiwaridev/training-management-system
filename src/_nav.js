@@ -91,6 +91,16 @@ const _nav = [
         },
       ]
     : []),
+  {
+    component: CNavItem,
+    name: 'Report',
+    to: '/master-report',
+    icon: <CIcon icon={cilFile} customClassName="nav-icon" />,
+    badge: {
+      color: 'info',
+      text: 'NEW',
+    },
+  },
   // {
   //   component: CNavTitle,
   //   name: 'Header Section',
