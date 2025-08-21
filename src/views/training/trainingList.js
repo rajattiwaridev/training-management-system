@@ -276,6 +276,7 @@ const TrainingList = () => {
                   <CTableRow>
                     <CTableHeaderCell>Title</CTableHeaderCell>
                     <CTableHeaderCell>Trainer</CTableHeaderCell>
+                    <CTableHeaderCell>Department</CTableHeaderCell>
                     <CTableHeaderCell>Type</CTableHeaderCell>
                     <CTableHeaderCell>Location</CTableHeaderCell>
                     <CTableHeaderCell>Date</CTableHeaderCell>
@@ -290,6 +291,7 @@ const TrainingList = () => {
                     <CTableRow key={training._id}>
                       <CTableDataCell>{training.title}</CTableDataCell>
                       <CTableDataCell>{training.trainerName}</CTableDataCell>
+                      <CTableDataCell>{training.departments?.departmentName}</CTableDataCell>
                       <CTableDataCell className="text-capitalize">
                         {training.trainingType}
                       </CTableDataCell>

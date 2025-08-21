@@ -35,6 +35,12 @@ const _nav = [
           to: '/division',
           icon: <CIcon icon={cilList} customClassName="nav-icon" />,
         },
+        {
+          component: CNavItem,
+          name: 'Department',
+          to: '/department',
+          icon: <CIcon icon={cilList} customClassName="nav-icon" />,
+        },
       ]
     : []),
   ...(role === 'SUPERADMIN' || role === 'SRM'
@@ -91,6 +97,16 @@ const _nav = [
         },
       ]
     : []),
+  {
+    component: CNavItem,
+    name: 'Report',
+    to: '/master-report',
+    icon: <CIcon icon={cilFile} customClassName="nav-icon" />,
+    badge: {
+      color: 'info',
+      text: 'NEW',
+    },
+  },
   // {
   //   component: CNavTitle,
   //   name: 'Header Section',

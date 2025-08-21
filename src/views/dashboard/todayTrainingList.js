@@ -294,6 +294,7 @@ const TodayTrainingList = () => {
           <CTableRow>
             <CTableHeaderCell>Title</CTableHeaderCell>
             <CTableHeaderCell>Trainer</CTableHeaderCell>
+            <CTableHeaderCell>Department</CTableHeaderCell>
             <CTableHeaderCell>Date</CTableHeaderCell>
             <CTableHeaderCell>Time</CTableHeaderCell>
             <CTableHeaderCell>QR Image</CTableHeaderCell>
@@ -354,6 +355,7 @@ const TrainingRow = ({ training, formatTime, getBadgeColor }) => {
     <CTableRow>
       <CTableDataCell>{training.title}</CTableDataCell>
       <CTableDataCell>{training.trainerName}</CTableDataCell>
+      <CTableDataCell>{training.departments?.departmentName}</CTableDataCell>
       <CTableDataCell>{new Date(training.date).toLocaleDateString()}</CTableDataCell>
       <CTableDataCell>
         {formatTime(training.startTime)} - {formatTime(training.endTime)}

@@ -63,7 +63,7 @@ const FeedbackList = () => {
       const response = await axios.get(`${endpoint}/feedbacks/training/${trainingId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      setFeedbacks(response.data)
+      setFeedbacks(response.data.filter(feedback => feedback.status === true)) // Only show received feedback
       setFeedbackLoading(false)
       setFeedbackModalVisible(true)
     } catch (error) {
@@ -133,6 +133,7 @@ const FeedbackList = () => {
                   <CTableRow>
                     <CTableHeaderCell>Title</CTableHeaderCell>
                     <CTableHeaderCell>Trainer</CTableHeaderCell>
+                    <CTableHeaderCell>Department</CTableHeaderCell>
                     <CTableHeaderCell>Date</CTableHeaderCell>
                     <CTableHeaderCell>Attendance</CTableHeaderCell>
                     <CTableHeaderCell>Feedback Count</CTableHeaderCell>
@@ -144,6 +145,7 @@ const FeedbackList = () => {
                     <CTableRow key={training._id}>
                       <CTableDataCell>{training.title}</CTableDataCell>
                       <CTableDataCell>{training.trainerName}</CTableDataCell>
+                      <CTableDataCell>{training.departments?.departmentName}</CTableDataCell>
                       <CTableDataCell>{dayjs(training.date).format('MMM D, YYYY')}</CTableDataCell>
                       <CTableDataCell>
                         <CBadge color="info">{training.attendanceCount || 0} attendees</CBadge>
