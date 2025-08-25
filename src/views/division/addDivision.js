@@ -10,6 +10,7 @@ import {
   CFormLabel,
   CRow,
   CFormSelect,
+  CFormCheck,
 } from '@coreui/react'
 import { CButton, CSmartTable } from '@coreui/react-pro'
 import axios from 'axios'
@@ -34,6 +35,7 @@ const AddDivision = () => {
     districtName: '',
     districtNameEng: '',
     LGDCode: 0,
+    isLightHouse: 'No',
   })
   const [stateeditMode, setStateEditMode] = useState(false)
   const [stateeditId, setStateEditId] = useState(null)
@@ -236,6 +238,7 @@ const AddDivision = () => {
           districtName: '',
           LGDCode: '',
           sName: '',
+          isLightHouse: 'No',
         })
         setDistrictEditMode(false)
         setDistrictValidated(false)
@@ -270,6 +273,7 @@ const AddDivision = () => {
       districtName: item.districtName,
       districtNameEng: item.districtNameEng,
       LGDCode: item.LGDCode,
+      isLightHouse: item.isLightHouse,
     })
     window.scrollTo({ top: 0, behavior: 'smooth' })
     // if (districtFormRef.current) {
@@ -407,7 +411,37 @@ const AddDivision = () => {
               validated={districtValidated}
               onSubmit={handleDistrictSubmit}
             >
-              <CCol md={12}>
+              <CCol md={6}>
+                <CFormLabel htmlFor="division">Is LightHouse</CFormLabel>
+                <div>
+                  <CFormCheck
+                    inline
+                    type="radio"
+                    name="isLightHouse"
+                    id="isLightHouse-yes"
+                    value="true"
+                    label="Yes"
+                    checked={String(districtFormData.isLightHouse) === 'true'}
+                    onChange={handleDistrictChange}
+                    required
+                  />
+                  <CFormCheck
+                    inline
+                    type="radio"
+                    name="isLightHouse"
+                    id="isLightHouse-no"
+                    value="false"
+                    label="No"
+                    checked={String(districtFormData.isLightHouse) === 'false'}
+                    onChange={handleDistrictChange}
+                    required
+                  />
+                </div>
+
+                <CFormFeedback invalid>Select This.</CFormFeedback>
+              </CCol>
+
+              <CCol md={6}>
                 <CFormLabel htmlFor="division">Division</CFormLabel>
                 <CFormSelect
                   id="division"
