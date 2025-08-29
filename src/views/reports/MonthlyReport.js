@@ -20,6 +20,8 @@ import {
 } from '@coreui/react'
 import axios from 'axios'
 import SweetAlert from 'sweetalert2'
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const MonthlyReport = () => {
   const endpoint = import.meta.env.VITE_BACKEND_API
@@ -69,7 +71,7 @@ const MonthlyReport = () => {
   useEffect(() => {
     const isValid = selectedState && selectedYear && selectedMonth
     setFormValid(isValid)
-    
+
     // Generate dates when month and year are selected
     if (selectedYear && selectedMonth) {
       generateDatesInMonth()
@@ -85,19 +87,21 @@ const MonthlyReport = () => {
   const generateDatesInMonth = () => {
     const year = parseInt(selectedYear)
     const month = parseInt(selectedMonth)
-    
+
     // Get number of days in the month
     const daysInMonth = new Date(year, month, 0).getDate()
-    
-    // Generate array of dates
+
     const dates = []
     for (let day = 1; day <= daysInMonth; day++) {
       // Don't include future dates if it's the current month and year
       if (!(year === currentYear && month === currentMonth && day > currentDate.getDate())) {
-        dates.push(day)
+        // Format as dd/mm/yyyy
+        const formatted =
+          String(day).padStart(2, '0') + '-' + String(month).padStart(2, '0') + '-' + year
+        dates.push(formatted)
       }
     }
-    
+
     setDatesInMonth(dates)
   }
 
@@ -175,32 +179,46 @@ const MonthlyReport = () => {
 
     return isStateValid && isYearValid && isMonthValid
   }
+  const [departments, setDepartments] = useState([])
+  const [srmReport, setSRMReport] = useState([])
+  // Separate lighthouse and non-lighthouse districts
+  const lighthouseDistricts = districts
+    .filter((district) => district.isLightHouse === true)
+    .sort((a, b) => a.districtNameEng.localeCompare(b.districtNameEng))
 
+  const nonLighthouseDistricts = districts
+    .filter((district) => district.isLightHouse === false)
+    .sort((a, b) => a.districtNameEng.localeCompare(b.districtNameEng))
   const getReportData = async () => {
     if (!validateForm()) {
       SweetAlert.fire('Error', 'Please fill all required fields', 'error')
       return
     }
-    console.log(selectedState,selectedYear,selectedMonth)
     try {
       setLoadingReport(true)
       // For demonstration, we'll create mock data
       // In a real application, you would fetch this from your API
       const mockData = {}
-      
-      districts.forEach(district => {
+      const responseData = await axios.get(
+        `${endpoint}/monthly-report?stateId=${selectedState}&year=${selectedYear}&month=${selectedMonth}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      )
+      districts.forEach((district) => {
         mockData[district._id] = {}
-        datesInMonth.forEach(date => {
+        datesInMonth.forEach((date) => {
           // Generate some random metrics for demonstration
           mockData[district._id][date] = {
             value: Math.floor(Math.random() * 100),
-            status: Math.random() > 0.2 ? 'Completed' : 'Pending'
+            status: Math.random() > 0.2 ? 'Completed' : 'Pending',
           }
         })
       })
-      
-      setReportData(mockData)
-      
+      setDepartments(responseData.data.departmentss)
+      setReportData(transformReportData(responseData.data.report))
+      setSRMReport(transformReportData(responseData.data.SRMReport))
+
       SweetAlert.fire('Success', 'Report generated successfully!', 'success')
     } catch (error) {
       SweetAlert.fire('Error', 'Failed to generate report', 'error')
@@ -210,15 +228,41 @@ const MonthlyReport = () => {
   }
 
   // Get the selected state name
-  const selectedStateName = states.find(state => state._id === selectedState)?.stateName || '';
+  const selectedStateName = states.find((state) => state._id === selectedState)?.stateName || ''
+  const formatDate = (dateStr) => {
+    const d = new Date(dateStr)
+    const day = String(d.getDate()).padStart(2, '0')
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const year = d.getFullYear()
+    return `${day}-${month}-${year}` // "01-08-2025"
+  }
 
-  // Separate lighthouse and non-lighthouse districts
-  const lighthouseDistricts = districts.filter(district => district.isLightHouse === true)
-    .sort((a, b) => a.districtNameEng.localeCompare(b.districtNameEng));
-  
-  const nonLighthouseDistricts = districts.filter(district => district.isLightHouse === false)
-    .sort((a, b) => a.districtNameEng.localeCompare(b.districtNameEng));
+  const transformReportData = (rawData) => {
+    const formatted = {}
 
+    rawData.forEach((item) => {
+      const { Date: rawDate, Department: dept, ...districts } = item
+      const date = formatDate(rawDate) // 🔥 normalize here
+
+      Object.keys(districts).forEach((districtName) => {
+        if (!formatted[districtName]) formatted[districtName] = {}
+        if (!formatted[districtName][date]) formatted[districtName][date] = {}
+
+        formatted[districtName][date][dept] = {
+          value: districts[districtName],
+          status: districts[districtName] > 0 ? 'Completed' : 'Pending',
+        }
+      })
+    })
+
+    return formatted
+  }
+  const exportToExcel = () => {
+    const table = document.getElementById("reportTable"); // table ka id
+    const workbook = XLSX.utils.table_to_book(table, { sheet: "Report" });
+    const wbout = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    saveAs(new Blob([wbout], { type: "application/octet-stream" }), "report.xlsx");
+  };
   return (
     <CRow>
       <CCol xs={12}>
@@ -298,9 +342,9 @@ const MonthlyReport = () => {
               </CCol>
 
               <CCol xs={12} className="text-center mt-3">
-                <CButton 
-                  color="primary" 
-                  onClick={getReportData} 
+                <CButton
+                  color="primary"
+                  onClick={getReportData}
                   disabled={loadingReport || !formValid}
                 >
                   {loadingReport ? <CSpinner size="sm" /> : 'Generate Report'}
@@ -315,18 +359,28 @@ const MonthlyReport = () => {
                   Report of {selectedStateName} for {monthNames[selectedMonth - 1]} {selectedYear}
                   {loadingDistricts && <CSpinner size="sm" className="ms-2" />}
                 </h5>
-                
-                <div className="table-responsive">
-                  <CTable striped responsive>
+                <CButton color="primary" onClick={exportToExcel} className="mb-3">
+                  Export to Excel
+                </CButton>
+                <div style={{ overflowY: 'auto', lineHeight: '10px', whiteSpace: 'nowrap' }}>
+                  <CTable id="reportTable">
                     <CTableHead>
                       <CTableRow>
-                        <CTableHeaderCell rowSpan="2">Date</CTableHeaderCell>
+                        <CTableHeaderCell rowSpan="2" style={{ width: '200px' }}>
+                          Date
+                        </CTableHeaderCell>
                         <CTableHeaderCell rowSpan="2">Departments</CTableHeaderCell>
                         <CTableHeaderCell rowSpan="2">State Level Training</CTableHeaderCell>
-                        <CTableHeaderCell colSpan={lighthouseDistricts.length} className="text-center">
+                        <CTableHeaderCell
+                          colSpan={lighthouseDistricts.length}
+                          className="text-center"
+                        >
                           Lighthouse Districts
                         </CTableHeaderCell>
-                        <CTableHeaderCell colSpan={nonLighthouseDistricts.length} className="text-center">
+                        <CTableHeaderCell
+                          colSpan={nonLighthouseDistricts.length}
+                          className="text-center"
+                        >
                           Non-Lighthouse Districts
                         </CTableHeaderCell>
                       </CTableRow>
@@ -337,7 +391,7 @@ const MonthlyReport = () => {
                             {district.districtNameEng}
                           </CTableHeaderCell>
                         ))}
-                        
+
                         {/* Non-Lighthouse district headers */}
                         {nonLighthouseDistricts.map((district) => (
                           <CTableHeaderCell key={district._id}>
@@ -347,45 +401,100 @@ const MonthlyReport = () => {
                       </CTableRow>
                     </CTableHead>
                     <CTableBody>
-                      {datesInMonth.map((date) => (
-                        <CTableRow key={date}>
-                          <CTableDataCell>{date}</CTableDataCell>
-                          <CTableDataCell>
-                            {/* Department data would go here */}
-                            <CBadge color="info">N/A</CBadge>
-                          </CTableDataCell>
-                          <CTableDataCell>
-                            {/* State Level Training data would go here */}
-                            <CBadge color="info">N/A</CBadge>
-                          </CTableDataCell>
-                          
-                          {/* Lighthouse districts data */}
-                          {lighthouseDistricts.map((district) => (
-                            <CTableDataCell key={district._id}>
-                              {reportData && reportData[district._id] && reportData[district._id][date] ? (
-                                <CBadge color={reportData[district._id][date].status === 'Completed' ? 'success' : 'warning'}>
-                                  {reportData[district._id][date].value}
-                                </CBadge>
-                              ) : (
-                                <CBadge color="secondary">-</CBadge>
+                      {datesInMonth.map((date) =>
+                        departments.length > 0 ? (
+                          departments.map((dept, deptIndex) => (
+                            <CTableRow key={`${date}-${dept}`}>
+                              {/* Only show Date cell once, with rowspan = departments.length */}
+                              {deptIndex === 0 && (
+                                <CTableDataCell
+                                  rowSpan={departments.length}
+                                  style={{ width: '70%' }}
+                                >
+                                  {date}
+                                </CTableDataCell>
                               )}
+
+                              {/* Department */}
+                              <CTableDataCell>{dept}</CTableDataCell>
+
+                              {/* State Level Training (placeholder for now) */}
+                              <CTableDataCell key={`LH-${date}-${dept}`}>
+                                {(() => {
+                                  const cell = srmReport?.total?.[date]?.[dept]
+                                  if (!cell) return <CBadge>0</CBadge>
+
+                                  return (
+                                    <>
+                                      {cell ? (
+                                        cell.value > 0 ? (
+                                          <CBadge color="success">{cell.value}</CBadge>
+                                        ) : (
+                                          0
+                                        )
+                                      ) : (
+                                        0
+                                      )}
+                                    </>
+                                  )
+                                })()}
+                              </CTableDataCell>
+
+                              {/* Lighthouse Districts */}
+                              {lighthouseDistricts.map((district) => {
+                                const cell = reportData?.[district.districtNameEng]?.[date]?.[dept]
+
+                                return (
+                                  <CTableDataCell key={`LH-${district._id}-${date}-${dept}`}>
+                                    {cell ? (
+                                      cell.value > 0 ? (
+                                        <CBadge color="success">{cell.value}</CBadge>
+                                      ) : (
+                                        0
+                                      )
+                                    ) : (
+                                      0
+                                    )}
+                                  </CTableDataCell>
+                                )
+                              })}
+
+                              {/* Non-Lighthouse Districts */}
+                              {nonLighthouseDistricts.map((district) => {
+                                const cell = reportData?.[district.districtNameEng]?.[date]?.[dept]
+
+                                return (
+                                  <CTableDataCell
+                                    key={`NLH-${district._id}-${date}-${dept}`}
+                                    className="text-center"
+                                  >
+                                    {cell ? (
+                                      cell.value > 0 ? (
+                                        <CBadge color="success">{cell.value}</CBadge>
+                                      ) : (
+                                        0
+                                      )
+                                    ) : (
+                                      0
+                                    )}
+                                  </CTableDataCell>
+                                )
+                              })}
+                            </CTableRow>
+                          ))
+                        ) : (
+                          <CTableRow key={`${date}-no-dept`}>
+                            <CTableDataCell>{date}</CTableDataCell>
+                            <CTableDataCell
+                              colSpan={
+                                3 + lighthouseDistricts.length + nonLighthouseDistricts.length
+                              }
+                            >
+                              <CBadge color="secondary">No Departments</CBadge>
                             </CTableDataCell>
-                          ))}
-                          
-                          {/* Non-Lighthouse districts data */}
-                          {nonLighthouseDistricts.map((district) => (
-                            <CTableDataCell key={district._id}>
-                              {reportData && reportData[district._id] && reportData[district._id][date] ? (
-                                <CBadge color={reportData[district._id][date].status === 'Completed' ? 'success' : 'warning'}>
-                                  {reportData[district._id][date].value}
-                                </CBadge>
-                              ) : (
-                                <CBadge color="secondary">-</CBadge>
-                              )}
-                            </CTableDataCell>
-                          ))}
-                        </CTableRow>
-                      ))}
+                          </CTableRow>
+                        ),
+                      )}
                     </CTableBody>
                   </CTable>
                 </div>
