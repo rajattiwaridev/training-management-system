@@ -17,11 +17,13 @@ import {
   CTableBody,
   CTableDataCell,
   CBadge,
+  CCardFooter,
+  CTableFoot,
 } from '@coreui/react'
 import axios from 'axios'
 import SweetAlert from 'sweetalert2'
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
+import * as XLSX from 'xlsx'
+import { saveAs } from 'file-saver'
 
 const MonthlyReport = () => {
   const endpoint = import.meta.env.VITE_BACKEND_API
@@ -258,11 +260,11 @@ const MonthlyReport = () => {
     return formatted
   }
   const exportToExcel = () => {
-    const table = document.getElementById("reportTable"); // table ka id
-    const workbook = XLSX.utils.table_to_book(table, { sheet: "Report" });
-    const wbout = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    saveAs(new Blob([wbout], { type: "application/octet-stream" }), "report.xlsx");
-  };
+    const table = document.getElementById('reportTable') // table ka id
+    const workbook = XLSX.utils.table_to_book(table, { sheet: 'Report' })
+    const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+    saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'report.xlsx')
+  }
   return (
     <CRow>
       <CCol xs={12}>
@@ -383,6 +385,10 @@ const MonthlyReport = () => {
                         >
                           Non-Lighthouse Districts
                         </CTableHeaderCell>
+                        <CTableHeaderCell rowSpan="2">Sub Total</CTableHeaderCell>
+                        <CTableHeaderCell rowSpan="2">Total</CTableHeaderCell>
+                        <CTableHeaderCell rowSpan="2">Count</CTableHeaderCell>
+                        <CTableHeaderCell rowSpan="2">Count of Trainings</CTableHeaderCell>
                       </CTableRow>
                       <CTableRow>
                         {/* Lighthouse district headers */}
@@ -400,102 +406,221 @@ const MonthlyReport = () => {
                         ))}
                       </CTableRow>
                     </CTableHead>
-                    <CTableBody>
-                      {datesInMonth.map((date) =>
-                        departments.length > 0 ? (
-                          departments.map((dept, deptIndex) => (
-                            <CTableRow key={`${date}-${dept}`}>
-                              {/* Only show Date cell once, with rowspan = departments.length */}
-                              {deptIndex === 0 && (
-                                <CTableDataCell
-                                  rowSpan={departments.length}
-                                  style={{ width: '70%' }}
-                                >
-                                  {date}
-                                </CTableDataCell>
-                              )}
 
-                              {/* Department */}
-                              <CTableDataCell>{dept}</CTableDataCell>
+                    {(() => {
+                      // 🔹 Grand Totals container (moved here at the top level of the IIFE)
+                      const grandTotals = {
+                        state: 0,
+                        lighthouse: lighthouseDistricts.map(() => 0),
+                        nonLighthouse: nonLighthouseDistricts.map(() => 0),
+                        subTotal: 0,
+                        dateTotal: 0,
+                        count: 0,
+                        countTotal: 0,
+                      }
 
-                              {/* State Level Training (placeholder for now) */}
-                              <CTableDataCell key={`LH-${date}-${dept}`}>
-                                {(() => {
-                                  const cell = srmReport?.total?.[date]?.[dept]
-                                  if (!cell) return <CBadge>0</CBadge>
+                      return (
+                        <>
+                          <CTableBody>
+                            {datesInMonth.map((date) => {
+                              if (departments.length === 0) {
+                                return (
+                                  <CTableRow key={`${date}-no-dept`}>
+                                    <CTableDataCell>{date}</CTableDataCell>
+                                    <CTableDataCell
+                                      colSpan={
+                                        3 +
+                                        lighthouseDistricts.length +
+                                        nonLighthouseDistricts.length +
+                                        4
+                                      }
+                                    >
+                                      <CBadge color="secondary">No Departments</CBadge>
+                                    </CTableDataCell>
+                                  </CTableRow>
+                                )
+                              }
 
-                                  return (
-                                    <>
-                                      {cell ? (
-                                        cell.value > 0 ? (
-                                          <CBadge color="success">{cell.value}</CBadge>
-                                        ) : (
-                                          0
-                                        )
+                              const statsByDept = {}
+                              let dateTotal = 0
+                              let dateTrainingCountTotal = 0
+
+                              departments.forEach((dept) => {
+                                let subtotal = 0
+                                let trainingCount = 0
+
+                                const st = srmReport?.total?.[date]?.[dept]
+                                if (st?.value) {
+                                  subtotal += st.value
+                                  trainingCount++
+                                  grandTotals.state += st.value
+                                }
+
+                                lighthouseDistricts.forEach((d, idx) => {
+                                  const cell = reportData?.[d.districtNameEng]?.[date]?.[dept]
+                                  if (cell?.value) {
+                                    subtotal += cell.value
+                                    trainingCount++
+                                    grandTotals.lighthouse[idx] += cell.value
+                                  }
+                                })
+
+                                nonLighthouseDistricts.forEach((d, idx) => {
+                                  const cell = reportData?.[d.districtNameEng]?.[date]?.[dept]
+                                  if (cell?.value) {
+                                    subtotal += cell.value
+                                    trainingCount++
+                                    grandTotals.nonLighthouse[idx] += cell.value
+                                  }
+                                })
+
+                                statsByDept[dept] = { subtotal, trainingCount }
+                                dateTotal += subtotal
+                                dateTrainingCountTotal += trainingCount
+                              })
+
+                              grandTotals.subTotal += dateTotal
+                              grandTotals.dateTotal += dateTotal
+                              grandTotals.count += dateTrainingCountTotal
+                              grandTotals.countTotal += dateTrainingCountTotal
+
+                              return departments.map((dept, deptIndex) => {
+                                const { subtotal, trainingCount } = statsByDept[dept]
+                                const stateCell = srmReport?.total?.[date]?.[dept]
+
+                                return (
+                                  <CTableRow key={`${date}-${dept}`}>
+                                    {deptIndex === 0 && (
+                                      <CTableDataCell
+                                        rowSpan={departments.length}
+                                        className="text-center align-middle fw-bold"
+                                      >
+                                        {date}
+                                      </CTableDataCell>
+                                    )}
+                                    <CTableDataCell>{dept}</CTableDataCell>
+                                    <CTableDataCell className="text-center">
+                                      {stateCell?.value > 0 ? (
+                                        <CBadge color="success">{stateCell.value}</CBadge>
                                       ) : (
                                         0
                                       )}
-                                    </>
-                                  )
-                                })()}
+                                    </CTableDataCell>
+
+                                    {lighthouseDistricts.map((district) => {
+                                      const cell =
+                                        reportData?.[district.districtNameEng]?.[date]?.[dept]
+                                      return (
+                                        <CTableDataCell
+                                          key={`LH-${district._id}-${date}-${dept}`}
+                                          className="text-center"
+                                        >
+                                          {cell?.value > 0 ? (
+                                            <CBadge color="success">{cell.value}</CBadge>
+                                          ) : (
+                                            0
+                                          )}
+                                        </CTableDataCell>
+                                      )
+                                    })}
+
+                                    {nonLighthouseDistricts.map((district) => {
+                                      const cell =
+                                        reportData?.[district.districtNameEng]?.[date]?.[dept]
+                                      return (
+                                        <CTableDataCell
+                                          key={`NLH-${district._id}-${date}-${dept}`}
+                                          className="text-center"
+                                        >
+                                          {cell?.value > 0 ? (
+                                            <CBadge color="success">{cell.value}</CBadge>
+                                          ) : (
+                                            0
+                                          )}
+                                        </CTableDataCell>
+                                      )
+                                    })}
+
+                                    <CTableDataCell className="text-center fw-bold">
+                                      {subtotal > 0 ? (
+                                        <CBadge color="primary">{subtotal}</CBadge>
+                                      ) : (
+                                        0
+                                      )}
+                                    </CTableDataCell>
+
+                                    {deptIndex === 0 && (
+                                      <CTableDataCell
+                                        rowSpan={departments.length}
+                                        className="text-center align-middle fw-bold"
+                                      >
+                                        {dateTotal > 0 ? dateTotal : 0}
+                                      </CTableDataCell>
+                                    )}
+
+                                    <CTableDataCell className="text-center fw-bold">
+                                      {trainingCount > 0 ? trainingCount : 0}
+                                    </CTableDataCell>
+
+                                    {deptIndex === 0 && (
+                                      <CTableDataCell
+                                        rowSpan={departments.length}
+                                        className="text-center align-middle fw-bold"
+                                      >
+                                        {dateTrainingCountTotal > 0 ? dateTrainingCountTotal : 0}
+                                      </CTableDataCell>
+                                    )}
+                                  </CTableRow>
+                                )
+                              })
+                            })}
+                          </CTableBody>
+
+                          {/* 🔹 FOOTER with Grand Totals */}
+                          <CTableFoot>
+                            <CTableRow className="fw-bold">
+                              <CTableDataCell colSpan={2} className="text-center align-middle">
+                                Grand Total
+                              </CTableDataCell>
+                              <CTableDataCell className="text-center align-middle">
+                                {grandTotals.state}
                               </CTableDataCell>
 
-                              {/* Lighthouse Districts */}
-                              {lighthouseDistricts.map((district) => {
-                                const cell = reportData?.[district.districtNameEng]?.[date]?.[dept]
+                              {grandTotals.lighthouse.map((val, idx) => (
+                                <CTableDataCell
+                                  key={`LH-total-${idx}`}
+                                  className="text-center align-middle"
+                                >
+                                  {val}
+                                </CTableDataCell>
+                              ))}
 
-                                return (
-                                  <CTableDataCell key={`LH-${district._id}-${date}-${dept}`}>
-                                    {cell ? (
-                                      cell.value > 0 ? (
-                                        <CBadge color="success">{cell.value}</CBadge>
-                                      ) : (
-                                        0
-                                      )
-                                    ) : (
-                                      0
-                                    )}
-                                  </CTableDataCell>
-                                )
-                              })}
+                              {grandTotals.nonLighthouse.map((val, idx) => (
+                                <CTableDataCell
+                                  key={`NLH-total-${idx}`}
+                                  className="text-center align-middle"
+                                >
+                                  {val}
+                                </CTableDataCell>
+                              ))}
 
-                              {/* Non-Lighthouse Districts */}
-                              {nonLighthouseDistricts.map((district) => {
-                                const cell = reportData?.[district.districtNameEng]?.[date]?.[dept]
-
-                                return (
-                                  <CTableDataCell
-                                    key={`NLH-${district._id}-${date}-${dept}`}
-                                    className="text-center"
-                                  >
-                                    {cell ? (
-                                      cell.value > 0 ? (
-                                        <CBadge color="success">{cell.value}</CBadge>
-                                      ) : (
-                                        0
-                                      )
-                                    ) : (
-                                      0
-                                    )}
-                                  </CTableDataCell>
-                                )
-                              })}
+                              <CTableDataCell className="text-center align-middle">
+                                {grandTotals.subTotal}
+                              </CTableDataCell>
+                              <CTableDataCell className="text-center align-middle">
+                                {grandTotals.dateTotal}
+                              </CTableDataCell>
+                              <CTableDataCell className="text-center align-middle">
+                                {grandTotals.count}
+                              </CTableDataCell>
+                              <CTableDataCell className="text-center align-middle">
+                                {grandTotals.countTotal}
+                              </CTableDataCell>
                             </CTableRow>
-                          ))
-                        ) : (
-                          <CTableRow key={`${date}-no-dept`}>
-                            <CTableDataCell>{date}</CTableDataCell>
-                            <CTableDataCell
-                              colSpan={
-                                3 + lighthouseDistricts.length + nonLighthouseDistricts.length
-                              }
-                            >
-                              <CBadge color="secondary">No Departments</CBadge>
-                            </CTableDataCell>
-                          </CTableRow>
-                        ),
-                      )}
-                    </CTableBody>
+                          </CTableFoot>
+                        </>
+                      )
+                    })()}
                   </CTable>
                 </div>
               </div>
