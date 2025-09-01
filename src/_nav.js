@@ -65,6 +65,16 @@ const _nav = [
             },
           ],
         },
+        {
+          component: CNavItem,
+          name: 'Monthly Report',
+          to: '/monthly-report',
+          icon: <CIcon icon={cilFile} customClassName="nav-icon" />,
+          badge: {
+            color: 'info',
+            text: 'NEW',
+          },
+        },
       ]
     : []),
   ...(role === 'SRM' || role === 'DRM'
@@ -107,16 +117,7 @@ const _nav = [
       text: 'NEW',
     },
   },
-  {
-    component: CNavItem,
-    name: 'Monthly Report',
-    to: '/monthly-report',
-    icon: <CIcon icon={cilFile} customClassName="nav-icon" />,
-    badge: {
-      color: 'info',
-      text: 'NEW',
-    },
-  },
+
   // {
   //   component: CNavTitle,
   //   name: 'Header Section',
