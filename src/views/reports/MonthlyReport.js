@@ -183,6 +183,8 @@ const MonthlyReport = () => {
   }
   const [departments, setDepartments] = useState([])
   const [srmReport, setSRMReport] = useState([])
+  const [srmAttendanceReport, setSRMAttendanceReport] = useState([])
+  const [attendanceReport, setAttendanceReport] = useState([])
   // Separate lighthouse and non-lighthouse districts
   const lighthouseDistricts = districts
     .filter((district) => district.isLightHouse === true)
@@ -191,6 +193,7 @@ const MonthlyReport = () => {
   const nonLighthouseDistricts = districts
     .filter((district) => district.isLightHouse === false)
     .sort((a, b) => a.districtNameEng.localeCompare(b.districtNameEng))
+
   const getReportData = async () => {
     if (!validateForm()) {
       SweetAlert.fire('Error', 'Please fill all required fields', 'error')
@@ -220,6 +223,8 @@ const MonthlyReport = () => {
       setDepartments(responseData.data.departmentss)
       setReportData(transformReportData(responseData.data.report))
       setSRMReport(transformReportData(responseData.data.SRMReport))
+      setAttendanceReport(transformReportData(responseData.data.attendanceReport))
+      setSRMAttendanceReport(responseData.data.SRMAttendanceReport)
 
       SweetAlert.fire('Success', 'Report generated successfully!', 'success')
     } catch (error) {
@@ -575,8 +580,95 @@ const MonthlyReport = () => {
                               })
                             })}
                           </CTableBody>
+                          {/* <CTableFoot>
+                            <CTableRow className="fw-bold">
+                              <CTableDataCell colSpan={2} className="text-center align-middle">
+                                Grand Total
+                              </CTableDataCell>
+                              <CTableDataCell className="text-center align-middle">
+                                {grandTotals.state}
+                              </CTableDataCell>
 
-                          {/* 🔹 FOOTER with Grand Totals */}
+                              {grandTotals.lighthouse.map((val, idx) => (
+                                <CTableDataCell
+                                  key={`LH-total-${idx}`}
+                                  className="text-center align-middle"
+                                >
+                                  {val}
+                                </CTableDataCell>
+                              ))}
+
+                              {grandTotals.nonLighthouse.map((val, idx) => (
+                                <CTableDataCell
+                                  key={`NLH-total-${idx}`}
+                                  className="text-center align-middle"
+                                >
+                                  {val}
+                                </CTableDataCell>
+                              ))}
+
+                              <CTableDataCell className="text-center align-middle">
+                                {grandTotals.subTotal}
+                              </CTableDataCell>
+                              <CTableDataCell className="text-center align-middle">
+                                {grandTotals.dateTotal}
+                              </CTableDataCell>
+                              <CTableDataCell className="text-center align-middle">
+                                {grandTotals.count}
+                              </CTableDataCell>
+                              <CTableDataCell className="text-center align-middle">
+                                {grandTotals.countTotal}
+                              </CTableDataCell>
+                            </CTableRow>
+                            <br />
+                            <br />
+                            <br />
+                            <br />
+                            <br />
+                            <br />
+                            <CTableRow className="fw-bold">
+                              <CTableDataCell colSpan={2} className="text-center align-middle">
+                                Attendance
+                              </CTableDataCell>
+                              {lighthouseDistricts.map((district) => (
+                                <CTableDataCell key={district._id}>
+                                  {district.districtNameEng}
+                                </CTableDataCell>
+                              ))}
+                              {nonLighthouseDistricts.map((district) => (
+                                <CTableDataCell key={district._id}>
+                                  {district.districtNameEng}
+                                </CTableDataCell>
+                              ))}
+                            </CTableRow>
+                            {departments.map((dept, idx) => (
+                              <CTableRow className="fw-bold" key={`attendance-dept-${idx}`}>
+                                <CTableDataCell colSpan={2} className="text-center align-middle">
+                                  {dept}
+                                </CTableDataCell>
+                                {Object.entries(attendanceReport).map(([dept, districts]) => (
+                                  <CTableRow key={dept}>
+                                    {lighthouseDistricts.map((district) => (
+                                      <CTableDataCell
+                                        key={`LH-${district._id}-${dept}`}
+                                        className="text-center"
+                                      >
+                                        {districts[district.districtNameEng] || 0}
+                                      </CTableDataCell>
+                                    ))}
+                                    {nonLighthouseDistricts.map((district) => (
+                                      <CTableDataCell
+                                        key={`LH-${district._id}-${dept}`}
+                                        className="text-center"
+                                      >
+                                        {districts[district.districtNameEng] || 0}
+                                      </CTableDataCell>
+                                    ))}
+                                  </CTableRow>
+                                ))}
+                              </CTableRow>
+                            ))}
+                          </CTableFoot> */}
                           <CTableFoot>
                             <CTableRow className="fw-bold">
                               <CTableDataCell colSpan={2} className="text-center align-middle">
@@ -617,6 +709,130 @@ const MonthlyReport = () => {
                                 {grandTotals.countTotal}
                               </CTableDataCell>
                             </CTableRow>
+
+                            {/* DRM Attendance Section */}
+                            <CTableRow>
+                              <CTableHeaderCell
+                                colSpan={
+                                  2 +
+                                  1 +
+                                  lighthouseDistricts.length +
+                                  nonLighthouseDistricts.length +
+                                  4
+                                }
+                                className="text-center bg-light"
+                              >
+                                Attendance Summary
+                              </CTableHeaderCell>
+                            </CTableRow>
+
+                            <CTableRow className="fw-bold">
+                              <CTableHeaderCell colSpan={2} className="text-center align-middle">
+                                Department
+                              </CTableHeaderCell>
+                              <CTableHeaderCell className="text-center align-middle">
+                                State Level
+                              </CTableHeaderCell>
+
+                              {/* Lighthouse district headers */}
+                              {lighthouseDistricts.map((district) => (
+                                <CTableHeaderCell
+                                  key={`drm-attendance-lh-${district._id}`}
+                                  className="text-center"
+                                >
+                                  {district.districtNameEng}
+                                </CTableHeaderCell>
+                              ))}
+
+                              {/* Non-Lighthouse district headers */}
+                              {nonLighthouseDistricts.map((district) => (
+                                <CTableHeaderCell
+                                  key={`drm-attendance-nlh-${district._id}`}
+                                  className="text-center"
+                                >
+                                  {district.districtNameEng}
+                                </CTableHeaderCell>
+                              ))}
+
+                              <CTableHeaderCell colSpan={4} className="text-center align-middle">
+                                Total Attendance
+                              </CTableHeaderCell>
+                            </CTableRow>
+
+                            {departments.map((dept) => {
+                              // Calculate DRM department attendance totals
+                              let drmDeptTotal = 0
+                              const drmDistrictAttendance = {}
+
+                              // Initialize with zeros for all districts
+                              ;[...lighthouseDistricts, ...nonLighthouseDistricts].forEach(
+                                (district) => {
+                                  drmDistrictAttendance[district.districtNameEng] = 0
+                                },
+                              )
+
+                              // Sum up DRM attendance for this department across all dates
+                              Object.entries(attendanceReport).forEach(([date, dateData]) => {
+                                if (dateData[dept]) {
+                                  Object.entries(dateData[dept]).forEach(([district, count]) => {
+                                    if (drmDistrictAttendance.hasOwnProperty(district)) {
+                                      drmDistrictAttendance[district] += count
+                                      drmDeptTotal += count
+                                    }
+                                  })
+                                }
+                              })
+
+                              // Calculate SRM state-level attendance for this department
+                              // Check if SRMAttendanceReport exists and is an array
+                              let stateLevelAttendance = 0
+                              if (srmAttendanceReport && Array.isArray(srmAttendanceReport)) {
+                                const srmAttendanceRecord = srmAttendanceReport.find(
+                                  (item) => item.department === dept,
+                                )
+                                stateLevelAttendance = srmAttendanceRecord
+                                  ? srmAttendanceRecord.attendanceCount
+                                  : 0
+                              }
+                              drmDeptTotal += stateLevelAttendance
+                              return (
+                                <CTableRow key={`drm-attendance-${dept}`}>
+                                  <CTableDataCell colSpan={2} className="text-center align-middle">
+                                    {dept}
+                                  </CTableDataCell>
+                                  <CTableDataCell className="text-center align-middle">
+                                    {stateLevelAttendance}
+                                  </CTableDataCell>
+
+                                  {/* Lighthouse district attendance */}
+                                  {lighthouseDistricts.map((district) => (
+                                    <CTableDataCell
+                                      key={`drm-attendance-lh-${district._id}-${dept}`}
+                                      className="text-center"
+                                    >
+                                      {drmDistrictAttendance[district.districtNameEng] || 0}
+                                    </CTableDataCell>
+                                  ))}
+
+                                  {/* Non-Lighthouse district attendance */}
+                                  {nonLighthouseDistricts.map((district) => (
+                                    <CTableDataCell
+                                      key={`drm-attendance-nlh-${district._id}-${dept}`}
+                                      className="text-center"
+                                    >
+                                      {drmDistrictAttendance[district.districtNameEng] || 0}
+                                    </CTableDataCell>
+                                  ))}
+
+                                  <CTableDataCell
+                                    colSpan={4}
+                                    className="text-center align-middle fw-bold"
+                                  >
+                                    {drmDeptTotal}
+                                  </CTableDataCell>
+                                </CTableRow>
+                              )
+                            })}
                           </CTableFoot>
                         </>
                       )
