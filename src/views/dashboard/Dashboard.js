@@ -53,6 +53,10 @@ const Dashboard = () => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' })
   const [srmListModalVisible, setSrmListModalVisible] = useState(null)
   const [showSrmListModal, setShowSrmListModal] = useState(null)
+  const [filteredData, setFilteredData] = useState([])
+
+  const [fromDate, setFromDate] = useState('')
+  const [toDate, setToDate] = useState('')
   useEffect(() => {
     const getCount = async () => {
       try {
@@ -221,13 +225,24 @@ const Dashboard = () => {
     getCount()
     getTodayTraining()
   }, [token])
+  // Format date to YYYY-MM-DD for comparison
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A'
-    try {
-      return format(new Date(dateString), 'dd MMM yyyy')
-    } catch {
-      return 'Invalid Date'
-    }
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const year = date.getFullYear()
+    return `${day}-${month}-${year}`
+  }
+
+  // Format time to HH:MM AM/PM
+  const formatTime = (timeString) => {
+    if (!timeString) return 'N/A'
+    const [hours, minutes] = timeString.split(':')
+    const h = parseInt(hours)
+    const period = h >= 12 ? 'PM' : 'AM'
+    const formattedHours = h % 12 || 12
+    return `${formattedHours}:${minutes} ${period}`
   }
   const handleSort = (key) => {
     let direction = 'ascending'
@@ -245,6 +260,92 @@ const Dashboard = () => {
     setDesignation(type)
     setSrmListModalVisible(true)
     setShowSrmListModal(true)
+  }
+  const [trainingData, setTrainingData] = useState([])
+  const [type, setType] = useState('')
+  const [trainingListModalVisible, setTrainingListModalVisible] = useState(false)
+  const handleShowTraining = async (type) => {
+    try {
+      setType(type)
+      const response = await axios.get(`${endpoint}/get-trainings-data?status=${type}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (response.status === 200) {
+        setTrainingData(response.data)
+        setFilteredData(response.data)
+        setTrainingListModalVisible(true)
+        // SweetAlert.fire({
+        //   title: 'Total Trainings',
+        //   html: `
+        //     <div style="max-height: 400px; overflow-y: auto;">
+        //       <table class="table table-bordered">
+        //         <thead>
+        //           <tr>
+        //             <th>Title</th>
+        //             <th>Start Date</th>
+        //             <th>End Date</th>
+        //             <th>Status</th>
+        //           </tr>
+        //         </thead>
+        //         <tbody>
+        //           ${response.data.upcomingTrainings
+        //             .map(
+        //               (training) => `
+        //             <tr>
+        //               <td>${training.title}</td>
+        //               <td>${formatDate(training.startDate)}</td>
+        //               <td>${formatDate(training.endDate)}</td>
+        //               <td><span class="badge bg-${getStatusBadgeColor(
+        //                 training.status,
+        //               )}">${training.status || 'N/A'}</span></td>
+        //             </tr>
+        //           `,
+        //             )
+        //             .join('')}
+        //         </tbody>
+        //       </table>
+        //     </div>
+        //   `,
+        //   width: '800px',
+        //   showCloseButton: true,
+        //   focusConfirm: false,
+        //   confirmButtonText: 'Close',
+        // })
+      }
+    } catch (error) {
+      SweetAlert.fire('Error', `${error.message}`, 'error')
+    }
+  }
+  // Apply filters when any filter changes
+  useEffect(() => {
+    let result = trainingData
+
+    // Apply date filter
+    if (fromDate) {
+      result = result.filter((item) => {
+        const itemDate = item.date
+        return itemDate >= fromDate
+      })
+    }
+
+    if (toDate) {
+      result = result.filter((item) => {
+        const itemDate = item.date
+        return itemDate <= toDate
+      })
+    }
+
+    setFilteredData(result)
+  }, [fromDate, toDate, trainingData])
+
+  // Reset all filters
+  const resetFilters = () => {
+    setFromDate('')
+    setToDate('')
+    setStatusFilter('All')
+    setDistrictFilter('All')
   }
   return (
     <CCol xs>
@@ -289,16 +390,32 @@ const Dashboard = () => {
                 <CRow>
                   <CCol xs={6}>
                     <div className="border-start border-start-4 border-start-warning py-1 px-3 mb-3">
-                      <div className="text-body-secondary text-truncate small">
-                        Total Training's
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div className="text-body-secondary text-truncate small">
+                          Total Training's
+                        </div>
+                        <button
+                          className="btn btn-link p-0 text-nowrap"
+                          onClick={() => handleShowTraining('all')}
+                        >
+                          View
+                        </button>
                       </div>
                       <div className="fs-5 fw-semibold">{statisticData.trainingCount}</div>
                     </div>
                   </CCol>
                   <CCol xs={6}>
                     <div className="border-start border-start-4 border-start-success py-1 px-3 mb-3">
-                      <div className="text-body-secondary text-truncate small">
-                        Training Scheduled
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div className="text-body-secondary text-truncate small">
+                          Training Scheduled
+                        </div>
+                        <button
+                          className="btn btn-link p-0 text-nowrap"
+                          onClick={() => handleShowTraining('scheduled')}
+                        >
+                          View
+                        </button>
                       </div>
                       <div className="fs-5 fw-semibold">{statisticData.trainingCountScheduled}</div>
                     </div>
@@ -309,16 +426,32 @@ const Dashboard = () => {
                 <CRow>
                   <CCol xs={6}>
                     <div className="border-start border-start-4 border-start-warning py-1 px-3 mb-3">
-                      <div className="text-body-secondary text-truncate small">
-                        Training Completed
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div className="text-body-secondary text-truncate small">
+                          Training Completed
+                        </div>
+                        <button
+                          className="btn btn-link p-0 text-nowrap"
+                          onClick={() => handleShowTraining('completed')}
+                        >
+                          View
+                        </button>
                       </div>
                       <div className="fs-5 fw-semibold">{statisticData.trainingCountCompleted}</div>
                     </div>
                   </CCol>
                   <CCol xs={6}>
                     <div className="border-start border-start-4 border-start-success py-1 px-3 mb-3">
-                      <div className="text-body-secondary text-truncate small">
-                        Training Cancelled
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div className="text-body-secondary text-truncate small">
+                          Training Cancelled
+                        </div>
+                        <button
+                          className="btn btn-link p-0 text-nowrap"
+                          onClick={() => handleShowTraining('cancelled')}
+                        >
+                          View
+                        </button>
                       </div>
                       <div className="fs-5 fw-semibold">{statisticData.trainingCountCancelled}</div>
                     </div>
@@ -408,16 +541,32 @@ const Dashboard = () => {
                   </CCol>
                   <CCol xs={6}>
                     <div className="border-start border-start-4 border-start-warning py-1 px-3 mb-3">
-                      <div className="text-body-secondary text-truncate small">
-                        Total Training's
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div className="text-body-secondary text-truncate small">
+                          Total Training's
+                        </div>
+                        <button
+                          className="btn btn-link p-0 text-nowrap"
+                          onClick={() => handleShowTraining('all')}
+                        >
+                          View
+                        </button>
                       </div>
                       <div className="fs-5 fw-semibold">{statisticData.trainingCount}</div>
                     </div>
                   </CCol>
                   <CCol xs={6}>
                     <div className="border-start border-start-4 border-start-success py-1 px-3 mb-3">
-                      <div className="text-body-secondary text-truncate small">
-                        Training Scheduled
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div className="text-body-secondary text-truncate small">
+                          Training Scheduled
+                        </div>
+                        <button
+                          className="btn btn-link p-0 text-nowrap"
+                          onClick={() => handleShowTraining('scheduled')}
+                        >
+                          View
+                        </button>
                       </div>
                       <div className="fs-5 fw-semibold">{statisticData.trainingCountScheduled}</div>
                     </div>
@@ -428,16 +577,32 @@ const Dashboard = () => {
                 <CRow>
                   <CCol xs={6}>
                     <div className="border-start border-start-4 border-start-warning py-1 px-3 mb-3">
-                      <div className="text-body-secondary text-truncate small">
-                        Training Completed
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div className="text-body-secondary text-truncate small">
+                          Training Completed
+                        </div>
+                        <button
+                          className="btn btn-link p-0 text-nowrap"
+                          onClick={() => handleShowTraining('completed')}
+                        >
+                          View
+                        </button>
                       </div>
                       <div className="fs-5 fw-semibold">{statisticData.trainingCountCompleted}</div>
                     </div>
                   </CCol>
                   <CCol xs={6}>
                     <div className="border-start border-start-4 border-start-success py-1 px-3 mb-3">
-                      <div className="text-body-secondary text-truncate small">
-                        Training Cancelled
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div className="text-body-secondary text-truncate small">
+                          Training Cancelled
+                        </div>
+                        <button
+                          className="btn btn-link p-0 text-nowrap"
+                          onClick={() => handleShowTraining('cancelled')}
+                        >
+                          View
+                        </button>
                       </div>
                       <div className="fs-5 fw-semibold">{statisticData.trainingCountCancelled}</div>
                     </div>
@@ -532,6 +697,99 @@ const Dashboard = () => {
           </CModalBody>
         </CModal>
       )}
+      <CModal
+        visible={trainingListModalVisible}
+        onClose={() => setTrainingListModalVisible(false)}
+        size="xl"
+      >
+        <CModalHeader>{type.toLocaleUpperCase()} TRAINING LIST</CModalHeader>
+        <div className="modal-body">
+          {/* Filter Section */}
+          <div className="row mb-4 p-3 bg-light rounded">
+            <h6>Filter Trainings</h6>
+
+            <div className="col-md-3 mb-2">
+              <label htmlFor="fromDate" className="form-label">
+                From Date
+              </label>
+              <input
+                type="date"
+                className="form-control"
+                id="fromDate"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+              />
+            </div>
+
+            <div className="col-md-3 mb-2">
+              <label htmlFor="toDate" className="form-label">
+                To Date
+              </label>
+              <input
+                type="date"
+                className="form-control"
+                id="toDate"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+              />
+            </div>
+
+            <div className="col-12 mt-2">
+              <button className="btn btn-sm btn-outline-secondary" onClick={resetFilters}>
+                Reset Filters
+              </button>
+              <span className="ms-2 text-muted">
+                Showing {filteredData.length} of {trainingData.length} trainings
+              </span>
+            </div>
+          </div>
+        </div>
+        <CModalBody>
+          <CTable hover responsive>
+            <CTableHead>
+              <CTableRow>
+                <CTableHeaderCell>Title</CTableHeaderCell>
+                <CTableHeaderCell>District</CTableHeaderCell>
+                <CTableHeaderCell>Training Location</CTableHeaderCell>
+                <CTableHeaderCell>Date</CTableHeaderCell>
+                <CTableHeaderCell>Time</CTableHeaderCell>
+                <CTableHeaderCell>Status</CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
+            <CTableBody>
+              {filteredData.length > 0 ? (
+                filteredData.map((training) => (
+                  <CTableRow key={training.id}>
+                    <CTableDataCell style={{ textWrap: 'balance' }}>
+                      {training.title || 'N/A'}
+                    </CTableDataCell>
+                    <CTableDataCell>{training.districtName || 'N/A'}</CTableDataCell>
+                    <CTableDataCell style={{ textWrap: 'balance' }}>
+                      {training.location || 'N/A'}
+                    </CTableDataCell>
+                    <CTableDataCell>{formatDate(training.date)}</CTableDataCell>
+                    <CTableDataCell>
+                      Start : {formatTime(training.startTime)} <br /> End :{' '}
+                      {formatTime(training.endTime)}{' '}
+                    </CTableDataCell>
+                    <CTableDataCell>
+                      <CBadge color={getStatusBadgeColor(training.status)}>
+                        {training.status || 'N/A'}
+                      </CBadge>
+                    </CTableDataCell>
+                  </CTableRow>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="text-center py-4">
+                    No trainings match the selected filters
+                  </td>
+                </tr>
+              )}
+            </CTableBody>
+          </CTable>
+        </CModalBody>
+      </CModal>
     </CCol>
   )
 }
