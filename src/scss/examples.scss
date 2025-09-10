@@ -109,8 +109,8 @@
   }
 }
 
-@include color-mode(dark) {
-  .example .tab-content {
-    background-color: var(--#{$prefix}secondary-bg);
-  }
-}
+// @include color-mode(dark) {
+//   .example .tab-content {
+//     background-color: var(--#{$prefix}secondary-bg);
+//   }
+// }
