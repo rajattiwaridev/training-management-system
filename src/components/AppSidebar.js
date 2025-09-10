@@ -48,11 +48,11 @@ const AppSidebar = () => {
           <p style={{ margin: 0, fontWeight: 'bold' }}> System</p>
         </CSidebarBrand>
 
-        <CCloseButton
+        {/* <CCloseButton
           className="d-lg-none"
           dark
           onClick={() => dispatch({ type: 'set', sidebarShow: false })}
-        />
+        /> */}
       </CSidebarHeader>
       <AppSidebarNav items={navigation} />
       <CSidebarFooter className="border-top d-none d-lg-flex">
