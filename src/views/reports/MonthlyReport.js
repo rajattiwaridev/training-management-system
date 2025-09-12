@@ -24,6 +24,8 @@ import axios from 'axios'
 import SweetAlert from 'sweetalert2'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
+import CIcon from '@coreui/icons-react'
+import { cilSync } from '@coreui/icons'
 
 const MonthlyReport = () => {
   const endpoint = import.meta.env.VITE_BACKEND_API
@@ -57,8 +59,18 @@ const MonthlyReport = () => {
 
   // Generate month options with names
   const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ]
 
   // Separate lighthouse and non-lighthouse districts
@@ -200,11 +212,11 @@ const MonthlyReport = () => {
           headers: { Authorization: `Bearer ${token}` },
         },
       )
-      
+
       setDepartments(responseData.data.departments)
       setReportData(responseData.data.report)
       setSRMReport(responseData.data.reportSRM)
-      
+
       SweetAlert.fire('Success', 'Report generated successfully!', 'success')
     } catch (error) {
       SweetAlert.fire('Error', `Failed to generate report:${error.message}`, 'error')
@@ -222,31 +234,34 @@ const MonthlyReport = () => {
       subTotal: 0,
       total: 0,
       count: 0,
-      trainingCount: 0
+      trainingCount: 0,
     }
 
     if (!reportData || !srmReport) return totals
 
-    datesInMonth.forEach(date => {
-      departments.forEach(dept => {
+    datesInMonth.forEach((date) => {
+      departments.forEach((dept) => {
         // State level data
         const stateData = srmReport[date]?.[dept.departmentName] || {}
         totals.state += stateData.attendanceCount || 0
 
         // Lighthouse districts
         lighthouseDistricts.forEach((district, idx) => {
-          const districtData = reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
+          const districtData =
+            reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
           totals.lighthouse[idx] += districtData.attendanceCount || 0
         })
 
         // Non-lighthouse districts
         nonLighthouseDistricts.forEach((district, idx) => {
-          const districtData = reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
+          const districtData =
+            reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
           totals.nonLighthouse[idx] += districtData.attendanceCount || 0
         })
 
         // Calculate department subtotal for this date
-        const deptSubtotal = (stateData.attendanceCount || 0) + 
+        const deptSubtotal =
+          (stateData.attendanceCount || 0) +
           lighthouseDistricts.reduce((sum, district) => {
             const data = reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
             return sum + (data.attendanceCount || 0)
@@ -260,11 +275,11 @@ const MonthlyReport = () => {
 
         // Training counts
         totals.count += stateData.trainingCount || 0
-        lighthouseDistricts.forEach(district => {
+        lighthouseDistricts.forEach((district) => {
           const data = reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
           totals.count += data.trainingCount || 0
         })
-        nonLighthouseDistricts.forEach(district => {
+        nonLighthouseDistricts.forEach((district) => {
           const data = reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
           totals.count += data.trainingCount || 0
         })
@@ -280,50 +295,51 @@ const MonthlyReport = () => {
   const exportToExcel = () => {
     // Create a flattened data structure for export
     const dataForExport = []
-    
+
     // Add headers
     const headers = [
-      'Date', 
-      'Department', 
+      'Date',
+      'Department',
       'State Level Training',
-      ...lighthouseDistricts.map(d => d.districtNameEng),
-      ...nonLighthouseDistricts.map(d => d.districtNameEng),
+      ...lighthouseDistricts.map((d) => d.districtNameEng),
+      ...nonLighthouseDistricts.map((d) => d.districtNameEng),
       'Sub Total',
       'Total',
       'Count',
-      'Count of Trainings'
+      'Count of Trainings',
     ]
     dataForExport.push(headers)
-    
+
     // Add data rows
-    datesInMonth.forEach(date => {
+    datesInMonth.forEach((date) => {
       departments.forEach((dept, deptIndex) => {
         const row = []
-        
+
         // Date (only show on first department row for this date)
         row.push(deptIndex === 0 ? date : '')
-        
+
         // Department
         row.push(dept.departmentName)
-        
+
         // State Level Training
         const stateData = srmReport[date]?.[dept.departmentName] || {}
         row.push(stateData.attendanceCount || 0)
-        
+
         // Lighthouse districts
-        lighthouseDistricts.forEach(district => {
+        lighthouseDistricts.forEach((district) => {
           const data = reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
           row.push(data.attendanceCount || 0)
         })
-        
+
         // Non-lighthouse districts
-        nonLighthouseDistricts.forEach(district => {
+        nonLighthouseDistricts.forEach((district) => {
           const data = reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
           row.push(data.attendanceCount || 0)
         })
-        
+
         // Sub Total
-        const subtotal = (stateData.attendanceCount || 0) + 
+        const subtotal =
+          (stateData.attendanceCount || 0) +
           lighthouseDistricts.reduce((sum, district) => {
             const data = reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
             return sum + (data.attendanceCount || 0)
@@ -333,27 +349,32 @@ const MonthlyReport = () => {
             return sum + (data.attendanceCount || 0)
           }, 0)
         row.push(subtotal)
-        
+
         // Total (only show on first department row for this date)
         if (deptIndex === 0) {
           const dateTotal = departments.reduce((sum, dept) => {
             const stateData = srmReport[date]?.[dept.departmentName] || {}
-            const districtTotal = lighthouseDistricts.reduce((s, district) => {
-              const data = reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
-              return s + (data.attendanceCount || 0)
-            }, 0) + nonLighthouseDistricts.reduce((s, district) => {
-              const data = reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
-              return s + (data.attendanceCount || 0)
-            }, 0)
+            const districtTotal =
+              lighthouseDistricts.reduce((s, district) => {
+                const data =
+                  reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
+                return s + (data.attendanceCount || 0)
+              }, 0) +
+              nonLighthouseDistricts.reduce((s, district) => {
+                const data =
+                  reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
+                return s + (data.attendanceCount || 0)
+              }, 0)
             return sum + (stateData.attendanceCount || 0) + districtTotal
           }, 0)
           row.push(dateTotal)
         } else {
           row.push('')
         }
-        
+
         // Count
-        const trainingCount = (stateData.trainingCount || 0) + 
+        const trainingCount =
+          (stateData.trainingCount || 0) +
           lighthouseDistricts.reduce((sum, district) => {
             const data = reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
             return sum + (data.trainingCount || 0)
@@ -363,29 +384,33 @@ const MonthlyReport = () => {
             return sum + (data.trainingCount || 0)
           }, 0)
         row.push(trainingCount)
-        
+
         // Count of Trainings (only show on first department row for this date)
         if (deptIndex === 0) {
           const dateTrainingCount = departments.reduce((sum, dept) => {
             const stateData = srmReport[date]?.[dept.departmentName] || {}
-            const districtTrainingCount = lighthouseDistricts.reduce((s, district) => {
-              const data = reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
-              return s + (data.trainingCount || 0)
-            }, 0) + nonLighthouseDistricts.reduce((s, district) => {
-              const data = reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
-              return s + (data.trainingCount || 0)
-            }, 0)
+            const districtTrainingCount =
+              lighthouseDistricts.reduce((s, district) => {
+                const data =
+                  reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
+                return s + (data.trainingCount || 0)
+              }, 0) +
+              nonLighthouseDistricts.reduce((s, district) => {
+                const data =
+                  reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
+                return s + (data.trainingCount || 0)
+              }, 0)
             return sum + (stateData.trainingCount || 0) + districtTrainingCount
           }, 0)
           row.push(dateTrainingCount)
         } else {
           row.push('')
         }
-        
+
         dataForExport.push(row)
       })
     })
-    
+
     // Add grand totals row
     const grandTotals = calculateGrandTotals()
     const totalsRow = [
@@ -397,15 +422,15 @@ const MonthlyReport = () => {
       grandTotals.subTotal,
       grandTotals.total,
       grandTotals.count,
-      grandTotals.trainingCount
+      grandTotals.trainingCount,
     ]
     dataForExport.push(totalsRow)
-    
+
     // Create worksheet and workbook
     const ws = XLSX.utils.aoa_to_sheet(dataForExport)
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'Monthly Report')
-    
+
     // Generate Excel file and save
     const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
     const data = new Blob([excelBuffer], { type: 'application/octet-stream' })
@@ -415,13 +440,42 @@ const MonthlyReport = () => {
   // Get the selected state name
   const selectedStateName = states.find((state) => state._id === selectedState)?.stateName || ''
   const grandTotals = calculateGrandTotals()
-
+  const handleSyncData = async () => {
+    try {
+      setLoadingReport(true)
+      const response = await axios.get(`${endpoint}/sync-details`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      SweetAlert.fire(
+        'Success',
+        response.data.message || 'Data synchronized successfully!',
+        'success',
+      )
+    } catch (error) {
+      SweetAlert.fire('Error', `Failed to synchronize data: ${error.message}`, 'error')
+    } finally {
+      setLoadingReport(false)
+    }
+  }
   return (
     <CRow>
       <CCol xs={12}>
         <CCard className="mb-4">
           <CCardHeader>
             <strong>Monthly Report</strong>
+            <br/>
+            Before Generating report please click on Sync Data to get latest data.
+            <CButton
+
+              color="info"
+              style={{ color: 'white' }}
+              className="ms-3"
+              size='sm'
+              onClick={handleSyncData}
+            >
+              Sync Data
+              <CIcon icon={cilSync} className="ms-2" />
+            </CButton>
           </CCardHeader>
           <CCardBody>
             <CRow className="g-3">
@@ -578,10 +632,7 @@ const MonthlyReport = () => {
                               <CTableDataCell>{date}</CTableDataCell>
                               <CTableDataCell
                                 colSpan={
-                                  3 +
-                                  lighthouseDistricts.length +
-                                  nonLighthouseDistricts.length +
-                                  4
+                                  3 + lighthouseDistricts.length + nonLighthouseDistricts.length + 4
                                 }
                               >
                                 <CBadge color="secondary">No Departments</CBadge>
@@ -597,7 +648,6 @@ const MonthlyReport = () => {
                         const departmentRows = departments.map((dept, deptIndex) => {
                           // State level data
                           const stateData = srmReport[date]?.[dept.departmentName] || {}
-                          console.log('State Data:', date, dept.departmentName, stateData)
                           const stateAttendance = stateData.attendanceCount || 0
                           const stateTrainingCount = stateData.trainingCount || 0
 
@@ -626,10 +676,13 @@ const MonthlyReport = () => {
 
                               {/* Lighthouse districts */}
                               {lighthouseDistricts.map((district) => {
-                                const data = reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
+                                const data =
+                                  reportData[district.districtNameEng]?.[date]?.[
+                                    dept.departmentName
+                                  ] || {}
                                 const attendance = data.attendanceCount || 0
                                 const trainingCount = data.trainingCount || 0
-                                
+
                                 deptSubtotal += attendance
                                 deptTrainingCount += trainingCount
 
@@ -649,10 +702,13 @@ const MonthlyReport = () => {
 
                               {/* Non-Lighthouse districts */}
                               {nonLighthouseDistricts.map((district) => {
-                                const data = reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
+                                const data =
+                                  reportData[district.districtNameEng]?.[date]?.[
+                                    dept.departmentName
+                                  ] || {}
                                 const attendance = data.attendanceCount || 0
                                 const trainingCount = data.trainingCount || 0
-                                
+
                                 deptSubtotal += attendance
                                 deptTrainingCount += trainingCount
 
@@ -698,7 +754,10 @@ const MonthlyReport = () => {
                                   className="text-center align-middle fw-bold"
                                 >
                                   {/* This will be calculated after processing all departments */}
-                                  <span className="date-training-total-placeholder" data-date={date}></span>
+                                  <span
+                                    className="date-training-total-placeholder"
+                                    data-date={date}
+                                  ></span>
                                 </CTableDataCell>
                               )}
                             </CTableRow>
@@ -709,44 +768,64 @@ const MonthlyReport = () => {
                         dateTotal = departments.reduce((total, dept) => {
                           const stateData = srmReport[date]?.[dept.departmentName] || {}
                           const stateAttendance = stateData.attendanceCount || 0
-                          
-                          const districtTotal = lighthouseDistricts.reduce((sum, district) => {
-                            const data = reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
-                            return sum + (data.attendanceCount || 0)
-                          }, 0) + nonLighthouseDistricts.reduce((sum, district) => {
-                            const data = reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
-                            return sum + (data.attendanceCount || 0)
-                          }, 0)
-                          
+
+                          const districtTotal =
+                            lighthouseDistricts.reduce((sum, district) => {
+                              const data =
+                                reportData[district.districtNameEng]?.[date]?.[
+                                  dept.departmentName
+                                ] || {}
+                              return sum + (data.attendanceCount || 0)
+                            }, 0) +
+                            nonLighthouseDistricts.reduce((sum, district) => {
+                              const data =
+                                reportData[district.districtNameEng]?.[date]?.[
+                                  dept.departmentName
+                                ] || {}
+                              return sum + (data.attendanceCount || 0)
+                            }, 0)
+
                           return total + stateAttendance + districtTotal
                         }, 0)
-                        
+
                         dateTrainingCountTotal = departments.reduce((total, dept) => {
                           const stateData = srmReport[date]?.[dept.departmentName] || {}
                           const stateTrainingCount = stateData.trainingCount || 0
-                          
-                          const districtTrainingCount = lighthouseDistricts.reduce((sum, district) => {
-                            const data = reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
-                            return sum + (data.trainingCount || 0)
-                          }, 0) + nonLighthouseDistricts.reduce((sum, district) => {
-                            const data = reportData[district.districtNameEng]?.[date]?.[dept.departmentName] || {}
-                            return sum + (data.trainingCount || 0)
-                          }, 0)
-                          
+
+                          const districtTrainingCount =
+                            lighthouseDistricts.reduce((sum, district) => {
+                              const data =
+                                reportData[district.districtNameEng]?.[date]?.[
+                                  dept.departmentName
+                                ] || {}
+                              return sum + (data.trainingCount || 0)
+                            }, 0) +
+                            nonLighthouseDistricts.reduce((sum, district) => {
+                              const data =
+                                reportData[district.districtNameEng]?.[date]?.[
+                                  dept.departmentName
+                                ] || {}
+                              return sum + (data.trainingCount || 0)
+                            }, 0)
+
                           return total + stateTrainingCount + districtTrainingCount
                         }, 0)
 
                         // Update the placeholders with calculated values
                         setTimeout(() => {
-                          const dateTotalEls = document.querySelectorAll(`.date-total-placeholder[data-date="${date}"]`)
-                          const dateTrainingTotalEls = document.querySelectorAll(`.date-training-total-placeholder[data-date="${date}"]`)
-                          
-                          dateTotalEls.forEach(el => {
+                          const dateTotalEls = document.querySelectorAll(
+                            `.date-total-placeholder[data-date="${date}"]`,
+                          )
+                          const dateTrainingTotalEls = document.querySelectorAll(
+                            `.date-training-total-placeholder[data-date="${date}"]`,
+                          )
+
+                          dateTotalEls.forEach((el) => {
                             el.textContent = dateTotal > 0 ? dateTotal : 0
                             el.classList.remove('date-total-placeholder')
                           })
-                          
-                          dateTrainingTotalEls.forEach(el => {
+
+                          dateTrainingTotalEls.forEach((el) => {
                             el.textContent = dateTrainingCountTotal > 0 ? dateTrainingCountTotal : 0
                             el.classList.remove('date-training-total-placeholder')
                           })
@@ -766,21 +845,21 @@ const MonthlyReport = () => {
                             0
                           )}
                         </CTableHeaderCell>
-                        
+
                         {/* Lighthouse district totals */}
                         {grandTotals.lighthouse.map((total, index) => (
                           <CTableHeaderCell key={`lh-total-${index}`} className="text-center">
                             {total > 0 ? <CBadge color="success">{total}</CBadge> : 0}
                           </CTableHeaderCell>
                         ))}
-                        
+
                         {/* Non-Lighthouse district totals */}
                         {grandTotals.nonLighthouse.map((total, index) => (
                           <CTableHeaderCell key={`non-lh-total-${index}`} className="text-center">
                             {total > 0 ? <CBadge color="success">{total}</CBadge> : 0}
                           </CTableHeaderCell>
                         ))}
-                        
+
                         <CTableHeaderCell className="text-center">
                           {grandTotals.subTotal > 0 ? (
                             <CBadge color="primary">{grandTotals.subTotal}</CBadge>
@@ -810,7 +889,8 @@ const MonthlyReport = () => {
           </CCardBody>
           <CCardFooter>
             <small className="text-medium-emphasis">
-              Report generated for {selectedStateName} - {monthNames[selectedMonth - 1]} {selectedYear}
+              Report generated for {selectedStateName} - {monthNames[selectedMonth - 1]}{' '}
+              {selectedYear}
             </small>
           </CCardFooter>
         </CCard>
