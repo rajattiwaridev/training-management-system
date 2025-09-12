@@ -25,7 +25,17 @@ const AttendanceList = ({ training, onClose, onSave }) => {
   const token = sessionStorage.getItem('authToken')
   const [loading, setLoading] = useState(true)
   const [trainingAttendanceList, setTrainingAttendanceList] = useState([])
-
+  const formatDate = (date) => {
+    const validDate = new Date(date)
+    if (isNaN(validDate)) {
+      console.error('Invalid date:', date)
+      return 'Invalid date'
+    }
+    const day = String(validDate.getDate()).padStart(2, '0')
+    const month = String(validDate.getMonth() + 1).padStart(2, '0')
+    const year = validDate.getFullYear()
+    return `${day}/${month}/${year}`
+  }
   useEffect(() => {
     const getAttendanceList = async () => {
       try {
@@ -114,7 +124,7 @@ const AttendanceList = ({ training, onClose, onSave }) => {
               <CCol md={6}>
                 <div className="mb-3">
                   <strong>Date:</strong>{' '}
-                  {training.date ? new Date(training.date).toLocaleDateString() : 'N/A'}
+                  {training.date ? formatDate(training.date) : 'N/A'}
                 </div>
                 <div className="mb-3">
                   <strong>End Time:</strong>{' '}
