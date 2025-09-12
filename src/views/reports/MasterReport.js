@@ -348,6 +348,17 @@ const MasterReport = () => {
 
     return matchesSearch && matchesDate && matchesRating
   })
+  const formatDate = (date) => {
+    const validDate = new Date(date)
+    if (isNaN(validDate)) {
+      console.error('Invalid date:', date)
+      return 'Invalid date'
+    }
+    const day = String(validDate.getDate()).padStart(2, '0')
+    const month = String(validDate.getMonth() + 1).padStart(2, '0')
+    const year = validDate.getFullYear()
+    return `${day}/${month}/${year}`
+  }
   return (
     <CRow>
       <CCol xs={12}>
@@ -457,7 +468,7 @@ const MasterReport = () => {
                   <CTableBody>
                     {currentItems.map((item, index) => (
                       <CTableRow key={index}>
-                        <CTableDataCell>{index + 1}</CTableDataCell>
+                        <CTableDataCell>{indexOfFirstItem + index + 1}</CTableDataCell>
                         <CTableDataCell>{item.name}</CTableDataCell>
                         <CTableDataCell>
                           {item.state.stateName} / {item.division.name} /{' '}
@@ -527,7 +538,6 @@ const MasterReport = () => {
                             {item.cancelledTraining}
                           </Tag>
                         </CTableDataCell>
-                        {/* Add more cells based on your API response structure */}
                       </CTableRow>
                     ))}
                   </CTableBody>
@@ -590,11 +600,11 @@ const MasterReport = () => {
                       <CTableDataCell>{item.departments?.departmentName}</CTableDataCell>
                       <CTableDataCell>{item.trainingType}</CTableDataCell>
                       <CTableDataCell>
-                        Date : {new Date(item.date).toLocaleDateString()} <br /> Time :{' '}
+                        Date : {formatDate(item.date)} <br /> Time :{' '}
                         {formatTime(item.startTime)} to {formatTime(item.endTime)}
                       </CTableDataCell>
                       <CTableDataCell>
-                        {new Date(item.createdAt).toLocaleDateString()}
+                        {formatDate(item.createdAt)}
                       </CTableDataCell>
                       <CTableDataCell style={{ textAlign: 'center' }}>
                         <Tag
@@ -686,7 +696,7 @@ const MasterReport = () => {
           <div className="mb-4">
             <div className="row">
               <div className="col-md-4">
-                <strong>Date:</strong> {dayjs(currentTraining?.date).format('MMMM D, YYYY')}
+                <strong>Date:</strong> {formatDate(currentTraining?.date)}
               </div>
               <div className="col-md-4">
                 <strong>Trainer:</strong> {currentTraining?.trainerName}

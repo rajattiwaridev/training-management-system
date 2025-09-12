@@ -274,45 +274,8 @@ const Dashboard = () => {
       })
       if (response.status === 200) {
         setTrainingData(response.data)
-        setFilteredData(response.data)
+        setFilteredData(response.data.sort((a, b) => new Date(b.date) - new Date(a.date)))
         setTrainingListModalVisible(true)
-        // SweetAlert.fire({
-        //   title: 'Total Trainings',
-        //   html: `
-        //     <div style="max-height: 400px; overflow-y: auto;">
-        //       <table class="table table-bordered">
-        //         <thead>
-        //           <tr>
-        //             <th>Title</th>
-        //             <th>Start Date</th>
-        //             <th>End Date</th>
-        //             <th>Status</th>
-        //           </tr>
-        //         </thead>
-        //         <tbody>
-        //           ${response.data.upcomingTrainings
-        //             .map(
-        //               (training) => `
-        //             <tr>
-        //               <td>${training.title}</td>
-        //               <td>${formatDate(training.startDate)}</td>
-        //               <td>${formatDate(training.endDate)}</td>
-        //               <td><span class="badge bg-${getStatusBadgeColor(
-        //                 training.status,
-        //               )}">${training.status || 'N/A'}</span></td>
-        //             </tr>
-        //           `,
-        //             )
-        //             .join('')}
-        //         </tbody>
-        //       </table>
-        //     </div>
-        //   `,
-        //   width: '800px',
-        //   showCloseButton: true,
-        //   focusConfirm: false,
-        //   confirmButtonText: 'Close',
-        // })
       }
     } catch (error) {
       SweetAlert.fire('Error', `${error.message}`, 'error')
@@ -749,6 +712,7 @@ const Dashboard = () => {
             <CTableHead>
               <CTableRow>
                 <CTableHeaderCell>Title</CTableHeaderCell>
+                <CTableHeaderCell>Created By</CTableHeaderCell>
                 <CTableHeaderCell>District</CTableHeaderCell>
                 <CTableHeaderCell>Training Location</CTableHeaderCell>
                 <CTableHeaderCell>Date</CTableHeaderCell>
@@ -760,9 +724,10 @@ const Dashboard = () => {
               {filteredData.length > 0 ? (
                 filteredData.map((training) => (
                   <CTableRow key={training.id}>
-                    <CTableDataCell style={{ textWrap: 'balance' }}>
+                    <CTableDataCell style={{ textWrap: 'balance', width: '200px' }}>
                       {training.title || 'N/A'}
                     </CTableDataCell>
+                    <CTableDataCell>Name : {training.createdBy.name || 'N/A'} <br/>Mobile : {training.createdBy.mobile || 'N/A'} </CTableDataCell>
                     <CTableDataCell>{training.districtName || 'N/A'}</CTableDataCell>
                     <CTableDataCell style={{ textWrap: 'balance' }}>
                       {training.location || 'N/A'}
