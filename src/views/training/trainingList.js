@@ -14,7 +14,7 @@ import {
   CTableDataCell,
   CSpinner,
   CFormSelect,
-  CBadge,  
+  CBadge,
   CModal,
   CModalHeader,
   CModalTitle,
@@ -41,7 +41,7 @@ const TrainingList = () => {
   const [typeFilter, setTypeFilter] = useState('')
   const [dateFilter, setDateFilter] = useState('')
   const [attendanceListModalVisible, setAttendanceListModalVisible] = useState(false)
-  
+
   // New state for completion modal
   const [completionModalVisible, setCompletionModalVisible] = useState(false)
   const [currentTraining, setCurrentTraining] = useState(null)
@@ -105,14 +105,14 @@ const TrainingList = () => {
     try {
       // If changing to completed, open modal instead of updating immediately
       if (newStatus === 'completed') {
-        const training = trainings.find(t => t._id === id)
+        const training = trainings.find((t) => t._id === id)
         if (training) {
           setCurrentTraining(training)
           setCompletionModalVisible(true)
         }
         return
       }
-      
+
       // For other statuses, update immediately
       await axios.patch(
         `${endpoint}/trainings/${id}/status`,
@@ -134,35 +134,31 @@ const TrainingList = () => {
       SweetAlert.fire('Error', 'Please enter attendance count', 'error')
       return
     }
-    
+
     if (photos.length < 2) {
       SweetAlert.fire('Error', 'Please upload at least 2 photos', 'error')
       return
     }
-    
+
     try {
       setUploading(true)
-      
+
       // Prepare form data
       const formData = new FormData()
       formData.append('status', 'completed')
       formData.append('attendanceCount', attendanceCount)
-      photos.forEach(photo => {
+      photos.forEach((photo) => {
         formData.append('photos', photo)
       })
-      
+
       // Send update request
-      await axios.patch(
-       `${endpoint}/trainings/${currentTraining._id}/status`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      )
-      
+      await axios.patch(`${endpoint}/trainings/${currentTraining._id}/status`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+
       // Reset and close
       setCompletionModalVisible(false)
       setAttendanceCount('')
@@ -199,14 +195,26 @@ const TrainingList = () => {
         : `${hour}:${minutes} AM`
   }
 
-  const [trainingAttendanceListModalEmployee, setTrainingAttendanceListModalEmployee] = useState(null)
+  const [trainingAttendanceListModalEmployee, setTrainingAttendanceListModalEmployee] =
+    useState(null)
   const handleAttendanceList = async (employee) => {
     setTrainingAttendanceListModalEmployee(employee)
     setAttendanceListModalVisible(true)
   }
-  
+
   const handlePhotoChange = (e) => {
-    setPhotos(Array.from(e.target.files))
+    const files = Array.from(e.target.files)
+    const maxSize = 3 * 1024 * 1024 // 3MB
+
+    const validFiles = files.filter((file) => {
+      if (file.size > maxSize) {
+        alert(`${file.name} is larger than 3 MB. Please choose a smaller file.`)
+        return false
+      }
+      return true
+    })
+
+    setPhotos(validFiles)
   }
 
   return (
@@ -356,7 +364,7 @@ const TrainingList = () => {
           </CCardBody>
         </CCard>
       </CCol>
-      
+
       {/* Attendance List Modal */}
       {attendanceListModalVisible && (
         <CModal
@@ -373,21 +381,20 @@ const TrainingList = () => {
           </CModalBody>
         </CModal>
       )}
-      
+
       {/* Completion Modal */}
-      <CModal 
-        visible={completionModalVisible} 
-        onClose={() => setCompletionModalVisible(false)}
-      >
+      <CModal visible={completionModalVisible} onClose={() => setCompletionModalVisible(false)}>
         <CModalHeader>
           <CModalTitle>Complete Training Session</CModalTitle>
         </CModalHeader>
         <CModalBody>
           {currentTraining && (
             <div>
-              <p>You are marking <strong>{currentTraining.title}</strong> as completed.</p>
+              <p>
+                You are marking <strong>{currentTraining.title}</strong> as completed.
+              </p>
               <p>Date: {dayjs(currentTraining.date).format('MMM D, YYYY')}</p>
-              
+
               <div className="mb-3">
                 <label className="form-label">Total Attendance Count</label>
                 <input
@@ -399,11 +406,9 @@ const TrainingList = () => {
                   required
                 />
               </div>
-              
+
               <div className="mb-3">
-                <label className="form-label">
-                  Upload Photos (Minimum 2 required)
-                </label>
+                <label className="form-label">Upload Photos (Minimum 2 required)</label>
                 <input
                   type="file"
                   className="form-control"
@@ -412,22 +417,18 @@ const TrainingList = () => {
                   onChange={handlePhotoChange}
                 />
                 <div className="form-text">
-                  {photos.length > 0 
-                    ? `${photos.length} photos selected` 
-                    : 'No photos selected'}
+                  {photos.length > 0 ? `${photos.length} photos selected` : 'No photos selected'}
                 </div>
                 {photos.length < 2 && (
-                  <div className="text-danger">
-                    Please select at least 2 photos
-                  </div>
+                  <div className="text-danger">Please select at least 2 photos</div>
                 )}
               </div>
             </div>
           )}
         </CModalBody>
         <CModalFooter>
-          <CButton 
-            color="secondary" 
+          <CButton
+            color="secondary"
             onClick={() => {
               setCompletionModalVisible(false)
               setPhotos([])
@@ -437,8 +438,8 @@ const TrainingList = () => {
           >
             Cancel
           </CButton>
-          <CButton 
-            color="primary" 
+          <CButton
+            color="primary"
             onClick={handleCompleteTraining}
             disabled={uploading || photos.length < 2 || !attendanceCount}
           >
