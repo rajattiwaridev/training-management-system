@@ -216,7 +216,171 @@ const TrainingList = () => {
 
     setPhotos(validFiles)
   }
+  const formatTime1 = (timeString) => {
+    if (!timeString) return ''
+    const [hours, minutes] = timeString.split(':')
+    const hour = parseInt(hours, 10)
 
+    if (hour === 0) {
+      return `12:${minutes} AM`
+    } else if (hour === 12) {
+      return `12:${minutes} PM`
+    } else if (hour > 12) {
+      return `${hour - 12}:${minutes} PM`
+    } else {
+      return `${hour}:${minutes} AM`
+    }
+  }
+  const handlePrint = (src, trainingData) => {
+    const printWindow = window.open('', '_blank')
+    printWindow.document.write(`
+      <html>
+  <head>
+    <title>Training Attendance - Print</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 15mm;
+      }
+      body {
+        font-family: 'Arial', sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #333;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #0066cc;
+        padding-bottom: 20px;
+      }
+      .logo {
+        height: 80px;
+        margin-bottom: 10px;
+      }
+      .system-name {
+        font-size: 24px;
+        font-weight: bold;
+        color: #0066cc;
+        margin-bottom: 5px;
+      }
+      .training-title {
+        font-size: 30px;
+        font-weight: bold;
+        margin: 25px 0;
+        color: #222;
+      }
+      .qr-container {
+        text-align: center;
+        margin: 30px 0;
+        padding: 20px;
+        border: 1px dashed #ccc;
+        border-radius: 5px;
+      }
+      .qr-code {
+        width: 250px;
+        height: 250px;
+        margin: 0 auto;
+      }
+      .scan-instruction {
+        font-size: 20px;
+        margin: 15px 0;
+        color: #555;
+      }
+      .details-container {
+        margin-top: 30px;
+      }
+      .detail-row {
+        display: flex;
+        margin-bottom: 10px;
+        font-size: 20px;
+      }
+      .detail-label {
+        font-size: 20px;
+        font-weight: bold;
+        width: 160px;
+      }
+      .footer {
+        margin-top: 40px;
+        text-align: center;
+        font-size: 12px;
+        color: #777;
+        border-top: 1px solid #eee;
+        padding-top: 15px;
+      }
+      @media print {
+        body {
+          padding: 0;
+        }
+        .no-print {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <img src="${logo}" class="logo" alt="Organization Logo">
+      <div class="system-name">Training Management System</div>
+      <div>Official Training Attendance</div>
+    </div>
+
+    <div class="training-title">Today's Training: <span id="training-title">${trainingData.title}</span></div>
+
+    <div class="qr-container">
+      <div class="scan-instruction">Scan the QR Code below to mark your attendance</div>
+      <img src="${src}" class="qr-code" alt="Attendance QR Code">
+    </div>
+
+    <div class="details-container">
+      <div class="detail-row">
+        <div class="detail-label">Training Date:</div>
+        <div id="training-date">${new Date(trainingData.date).toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        })}</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Training Time:</div>
+        <div id="training-time">${formatTime1(trainingData.startTime)} - ${formatTime1(trainingData.endTime)}</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Location:</div>
+        <div id="training-location">${trainingData.location}</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Trainer:</div>
+        <div id="training-trainer">${trainingData.trainerName}</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>Generated on <span id="print-date"></span></div>
+    </div>
+
+    <script>
+      // You can dynamically populate these fields from your data
+      document.addEventListener('DOMContentLoaded', function() {
+        // Format the current date for the footer
+        const now = new Date();
+        document.getElementById('print-date').textContent = now.toLocaleString();
+        
+        // Auto-print and close (for the print window)
+        setTimeout(function() {
+          window.print();
+          setTimeout(function() {
+            window.close();
+          }, 500);
+        }, 300);
+      });
+    </script>
+  </body>
+</html>
+    `)
+    printWindow.document.close()
+  }
   return (
     <CRow>
       <CCol xs={12}>
@@ -291,6 +455,7 @@ const TrainingList = () => {
                     <CTableHeaderCell>Time</CTableHeaderCell>
                     <CTableHeaderCell>Status</CTableHeaderCell>
                     <CTableHeaderCell>QR Image</CTableHeaderCell>
+                    <CTableHeaderCell>Print QR</CTableHeaderCell>
                     <CTableHeaderCell>Actions</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
@@ -331,6 +496,14 @@ const TrainingList = () => {
                           height="50px"
                           src={`${endpoint}/${training.qrCodeImg}`}
                         />
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <CBadge
+                          color="primary"
+                          onClick={() => handlePrint(`${endpoint}/${training.qrCodeImg}`, training)}
+                        >
+                          Print QR
+                        </CBadge>
                       </CTableDataCell>
                       {training.status === 'scheduled' ? (
                         <CTableDataCell>

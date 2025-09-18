@@ -1,0 +1,56 @@
+.table-container {
+  max-height: 500px;
+  overflow: auto;
+  position: relative;
+  border: 1px solid #dee2e6;
+}
+
+/* Sticky header */
+#reportTable thead tr th {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 100;
+  box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Sticky first column */
+#reportTable tr td:first-child,
+#reportTable tr th:first-child {
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 50;
+  box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* Sticky second column */
+#reportTable tr td:nth-child(2),
+#reportTable tr th:nth-child(2) {
+  position: sticky;
+  left: 100px; /* Adjust based on first column width */
+  background: white;
+  z-index: 50;
+  box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure header cells appear above column cells */
+#reportTable thead tr th {
+  z-index: 101;
+}
+
+/* Badge styling */
+.badge {
+  font-size: 0.85em;
+}
+
+/* Footer styling */
+#reportTable tfoot tr th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+
+/* Zebra striping for rows */
+#reportTable tbody tr:nth-child(odd) {
+  background-color: rgba(0, 0, 0, 0.02);
+}
