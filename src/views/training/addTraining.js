@@ -339,7 +339,7 @@ const AddTraining = () => {
                   onChange={handleDateChange}
                   value={trainingData.date}
                   className="w-100 border rounded p-2"
-                  minDate={new Date()}
+                  minDate={new Date(new Date().setDate(new Date().getDate() - 1))}
                 />
               </CCol>
               <CCol md={6}>

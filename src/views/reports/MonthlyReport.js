@@ -26,6 +26,7 @@ import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import CIcon from '@coreui/icons-react'
 import { cilSync } from '@coreui/icons'
+// import './monthlyReport.css'
 
 const MonthlyReport = () => {
   const endpoint = import.meta.env.VITE_BACKEND_API
@@ -569,9 +570,9 @@ const MonthlyReport = () => {
                 <CButton color="primary" onClick={exportToExcel} className="mb-3">
                   Export to Excel
                 </CButton>
-                <div style={{ overflowX: 'auto' }}>
+                <div style={{ overflowX: 'auto' }} className='table-container'>
                   <CTable id="reportTable" striped responsive>
-                    <CTableHead>
+                    <CTableHead className="sticky-top">
                       <CTableRow>
                         <CTableHeaderCell rowSpan="2" style={{ minWidth: '100px' }}>
                           Date
