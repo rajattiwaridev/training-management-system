@@ -28,6 +28,7 @@ import axios from 'axios'
 import dayjs from 'dayjs'
 import { Image } from 'antd'
 import AttendanceList from '../attendance/attendanceList'
+import logo from '../../assets/images/logo.png'
 
 const TrainingList = () => {
   const endpoint = import.meta.env.VITE_BACKEND_API
