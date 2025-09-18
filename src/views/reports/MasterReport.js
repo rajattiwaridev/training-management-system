@@ -475,9 +475,8 @@ const MasterReport = () => {
                           {item.district.districtNameEng}
                         </CTableDataCell>
                         <CTableDataCell style={{ textAlign: 'center' }}>
-                          <Tag
-                            color="blue"
-                            style={{ color: 'black' }}
+                          <a
+                            href="#"
                             onClick={() =>
                               handleShowTrainings(
                                 item.name,
@@ -488,12 +487,11 @@ const MasterReport = () => {
                             }
                           >
                             {item.totalTraining}
-                          </Tag>
+                          </a>
                         </CTableDataCell>
                         <CTableDataCell style={{ textAlign: 'center' }}>
-                          <Tag
-                            color="orange"
-                            style={{ color: 'black' }}
+                          <a
+                            href="#"
                             onClick={() =>
                               handleShowTrainings(
                                 item.name,
@@ -504,12 +502,11 @@ const MasterReport = () => {
                             }
                           >
                             {item.scheduledTraining}
-                          </Tag>
+                          </a>
                         </CTableDataCell>
                         <CTableDataCell style={{ textAlign: 'center' }}>
-                          <Tag
-                            color="green"
-                            style={{ color: 'black' }}
+                          <a
+                            href="#"
                             onClick={() =>
                               handleShowTrainings(
                                 item.name,
@@ -520,12 +517,11 @@ const MasterReport = () => {
                             }
                           >
                             {item.completedTraining}
-                          </Tag>
+                          </a>
                         </CTableDataCell>
                         <CTableDataCell style={{ textAlign: 'center' }}>
-                          <Tag
-                            color="red"
-                            style={{ color: 'black' }}
+                          <a
+                            href="#"
                             onClick={() =>
                               handleShowTrainings(
                                 item.name,
@@ -536,7 +532,7 @@ const MasterReport = () => {
                             }
                           >
                             {item.cancelledTraining}
-                          </Tag>
+                          </a>
                         </CTableDataCell>
                       </CTableRow>
                     ))}
@@ -600,41 +596,36 @@ const MasterReport = () => {
                       <CTableDataCell>{item.departments?.departmentName}</CTableDataCell>
                       <CTableDataCell>{item.trainingType}</CTableDataCell>
                       <CTableDataCell>
-                        Date : {formatDate(item.date)} <br /> Time :{' '}
-                        {formatTime(item.startTime)} to {formatTime(item.endTime)}
+                        Date : {formatDate(item.date)} <br /> Time : {formatTime(item.startTime)} to{' '}
+                        {formatTime(item.endTime)}
                       </CTableDataCell>
-                      <CTableDataCell>
-                        {formatDate(item.createdAt)}
-                      </CTableDataCell>
+                      <CTableDataCell>{formatDate(item.createdAt)}</CTableDataCell>
                       <CTableDataCell style={{ textAlign: 'center' }}>
-                        <Tag
-                          color="blue"
-                          style={{ color: 'black' }}
+                        <a
+                          href="#"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleShowTrainingAttendance(item)
                           }}
                         >
                           {item.totalAttendance}
-                        </Tag>
+                        </a>
                       </CTableDataCell>
                       <CTableDataCell style={{ textAlign: 'center' }}>
-                        <Tag
-                          color="orange"
-                          style={{ color: 'black' }}
+                        <a
+                          href="#"
                           onClick={() => handleViewFeedback(item, 'requested')}
                         >
                           {item.requestedFeedback}
-                        </Tag>
+                        </a>
                       </CTableDataCell>
                       <CTableDataCell style={{ textAlign: 'center' }}>
-                        <Tag
-                          color="green"
-                          style={{ color: 'black' }}
+                        <a
+                          href="#"
                           onClick={() => handleViewFeedback(item, 'received')}
                         >
                           {item.receivedFeedback}
-                        </Tag>
+                        </a>
                       </CTableDataCell>
                     </CTableRow>
                   ))}
